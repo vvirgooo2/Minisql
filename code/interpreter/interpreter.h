@@ -1,7 +1,5 @@
 #ifndef _INTERPRETER_H_
 #define _INTERPRETER_H_
-
-
 #include<cstdio>
 #include<string>
 #include"Parser.h"
@@ -16,6 +14,4 @@ public:
 private:
     Parser parser;    
 };
-
-
 #endif
