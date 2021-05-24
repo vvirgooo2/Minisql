@@ -10,7 +10,6 @@ public:
     void flushBuffer();
 private:
     std::deque<std::string> buffer;
-
 };
 
 #endif 
