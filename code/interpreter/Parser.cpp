@@ -1,8 +1,10 @@
 #include<string>
+#include<cstdlib>
 #include<deque>
 #include<iostream>
 #include<vector>
 #include"Parser.h"
+#include"../SqlDataType.h"
 #include<iomanip>
 #include<iterator>
 #include<sstream>
@@ -65,16 +67,105 @@ void Parser::decode(vector<string> args){
     }
 }
 
+//找出表名和各属性，传入API
 void Parser::Create_table(vector<string> args){
-    cout<<"test for create table"<<endl;
+    //cout<<"test for create table"<<endl;
+    // create table tablename ( name int , name float, name char ( length ) , primary key ( name ) )
+    string tablename=args.at(2);
+    /*test*/
+    cout<<"table name: ";
+    cout<<tablename<<endl;
+
+    int i=3;
+    if(args.at(i++)!="(") cout<<"syntax error!"<<endl;
+    vector<attri_type> attris;
+    while(1){
+        attri_type tattr;
+        string name=args.at(i);
+        //primary key 定义
+        if(name=="primary"){
+            if(args.at(i+1)=="key"){
+                auto itr=attris.begin();
+                for(;itr!=attris.end();itr++){
+                    if(itr->attri_name==args.at(i+3)){
+                        itr->primary=true;
+                        break;
+                    }
+                }
+            }
+            i+=5;
+        }
+        //属性定义
+        else{
+            //store name
+            tattr.attri_name=name;
+            i++; 
+            //type
+            //store type
+            string type=args.at(i);
+            if(type=="int") tattr.type=AType::Integer;
+            else if(type=="float") tattr.type=AType::Float;
+            else if(type=="char") {
+                tattr.type=AType::String;
+                if(args.at(i+1)=="("&&args.at(i+3)==")"){
+                    string length=args.at(i+2);
+                    stringstream ss;
+                    ss<<length;
+                    ss>>tattr.char_sz;
+                    i=i+3;
+                }
+                else{ cout<<"syntax error!"<<endl; return; }
+            }
+            else { cout<<"Unknown type"<<endl; return;  }
+            
+            if(args.at(i+1)=="unique"){
+                tattr.unique=true;
+                i++;
+            }
+            attris.push_back(tattr);
+            i++;
+        }
+        if(args.at(i)!=","&&args.at(i)!=")") { cout<<"syntax error!"<<endl; return; }
+        if(args.at(i)==")") break;
+        else i++;
+    }
+    
+    //debug part
+    for(auto itr=attris.begin();itr!=attris.end();itr++){
+        cout<<itr->attri_name<<" ";
+        switch(itr->type){
+            case AType::Integer: cout<<"int  "; break;
+            case AType::Float: cout<<"float  " ; break;
+            case AType::String: cout<<"String  "; break;
+
+        }
+        if(itr->char_sz!=0) cout<<itr->char_sz;
+        if(itr->primary) cout<<"  primary ";
+        if(itr->unique) cout<<"  unique  ";
+        cout<<endl;
+    }
+    /*  调用API,传入表名和各属性
+        API_create_table(tablename,attris);
+    */
+
+    
 }
 
 void Parser::Drop_table(vector<string> args){
-    cout<<"test for drop table"<<endl;
+    //drop table tablename
+    string tablename;
+    tablename=args.at(2);
+    if(args.size()>3) { cout<<"One table once!"<<endl; return; }
+    else {
+        cout<<"API drop "<<tablename<<endl;
+        /* 调用API，只有一个表名作参数
+        API_drop_table(tablename);
+        */
+    }
 }
 
 void Parser::Create_index(vector<string> args){
-    cout<<"test for create index"<<endl;
+    
 }
 
 void Parser::Drop_index(vector<string> args){

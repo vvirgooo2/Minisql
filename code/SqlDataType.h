@@ -21,7 +21,7 @@ struct attri_type{
     string attri_name;
 
     AType type; 
-    int char_sz; //0-255
+    int char_sz=0; //0-255
 
     int getsize(){
         switch(type){
