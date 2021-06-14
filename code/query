@@ -1,0 +1,4 @@
+
+select * from sa;
+insert into tablename values('asdsda',12,12.3);
+select * from tablename where a<>'sda' and b<='ads' and c>=12 and d=12.4;

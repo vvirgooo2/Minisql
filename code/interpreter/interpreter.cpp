@@ -12,8 +12,17 @@ void interpreter::Loop(){
         getline(cin,ins);
         if(ins=="quit"){
             cout << "Bye!" << endl;
+            getchar();
+            getchar();
             exit(0);
         }
-        State = parser.input(ins);  //false代表还没输入完
+        try{ 
+            State = parser.input(ins);  //false代表还没输入完
+        }
+        catch (std::runtime_error &error) {
+            cout << "[Error] " << error.what() << endl;
+            parser.flushBuffer();
+            State = true;
+        }
     }
 }

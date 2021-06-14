@@ -35,8 +35,8 @@ struct attri_type{
 
 //单个sql值
 struct sqlvalue{
-    attri_type type;  //属性
-    int a;
+    attri_type type;  //属性,只用name和type
+    int i;
     float f;
     string str;
     //可能会定义一些有用的函数
@@ -45,7 +45,7 @@ struct sqlvalue{
 //用来存储条件 例如 where ID = '123'
 struct condition{
     string name;  //属性名
-    int op;       //0= 1!= 2> 3>= 4< 5<= 
+    int op;       //0= 1<> 2> 3>= 4< 5<= 
     sqlvalue val; 
 };
 
