@@ -75,7 +75,7 @@ void Parser::decode(vector<string> args){
 void Parser::Create_table(vector<string> args){
     //cout<<"test for create table"<<endl;
     // create table tablename ( name int , name float, name char ( length ) , primary key ( name ) )
-try{
+    try{
     string tablename=args.at(2);
     /*test*/
     cout<<"table name: ";
@@ -154,13 +154,13 @@ try{
     int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
     std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
-}
-catch (std::out_of_range) { throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax! (create table)");}
+    }
+    catch (std::out_of_range) { throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax! (create table)");}
 }
 
 //传给API 表名
 void Parser::Drop_table(vector<string> args){
-try{
+    try{
     //drop table tablename
     string tablename;
     tablename=args.at(2);
@@ -179,8 +179,8 @@ try{
         if (tempTime == 0) tempTime = 10;
         std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
-}
-catch (std::out_of_range) {
+    }
+    catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Drop table)");
     }
 }
@@ -189,7 +189,7 @@ catch (std::out_of_range) {
 void Parser::Create_index(vector<string> args){
     //create index index_name on tablename (attri_name)
     // 0      1      2         3    4       5   6     7
-try{
+    try{
     string indexname=args.at(2);
     if(args.at(3)!="on") {throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Create index)");}
     else{
@@ -212,8 +212,8 @@ try{
         }
         else { throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Create index)");}
     }
-}
-catch (std::out_of_range) {
+    }
+    catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Create index)");
     }
 
@@ -223,7 +223,7 @@ catch (std::out_of_range) {
 void Parser::Drop_index(vector<string> args){
     //drop index name
     //   0      1   2
-try{
+    try{
     string indexname;
     indexname=args.at(2);
     if(args.size()>3) { throw std::runtime_error("SYNTAX ERROR: You can only drop one index once");}
@@ -240,8 +240,8 @@ try{
         if (tempTime == 0) tempTime = 10;
         std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
-}
-catch (std::out_of_range) {
+    }
+    catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Drop index)");
     }
 }
@@ -250,7 +250,7 @@ catch (std::out_of_range) {
 void Parser::Select(vector<string> args){
     //select * from tablename where a<>'sda' and b<='ads' and c>=12 and d=12.4;
     // 0     1   2    3        4    
-try{
+    try{
     string tablename=args.at(3);
     int i=4;
     vector<condition> conditions; 
@@ -305,11 +305,7 @@ try{
     auto itr=conditions.begin();
     for(;itr!=conditions.end();itr++){
         cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
-        switch(itr->val.type.type){
-            case AType::Integer: cout<<itr->val.i;break;
-            case AType::Float: cout<<itr->val.f;break;
-            case AType::String: cout<<itr->val.str;break;
-        }
+        cout<<itr->val.toStr();
         cout<<endl;
     }
     //检查表，检查参数模块没有
@@ -321,8 +317,8 @@ try{
     int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
     std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
-}
-catch (std::out_of_range) {
+    }
+    catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");
     }
 }
@@ -330,7 +326,7 @@ catch (std::out_of_range) {
 void Parser::Insert(vector<string> args){
     //insert into tablename values('asdsda',12,12.3);
     //0       1     2        3     4  5    6   7  8  9   10
-try{  
+    try{  
     if(args.at(1)!="into") { throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Insert)"); }
     string tablename=args.at(2);
     if(args.at(3)!="values"||args.at(4)!="(") {throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Insert)");} 
@@ -360,11 +356,7 @@ try{
     //debug
     auto itr=value_list.begin();
     for(;itr!=value_list.end();itr++){
-        switch(itr->type.type){
-            case AType::Integer: cout<<"int "<<itr->i; break;
-            case AType::Float: cout<<"float "<<itr->f; break;
-            case AType::String: cout<<"string "<<itr->str; break;
-        }
+        cout<<itr->toStr();
         cout<<endl;
     }
     
@@ -374,8 +366,8 @@ try{
     int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
     std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
-}
-catch (std::out_of_range) {
+    }
+    catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Insert)");
     }
 }
@@ -383,7 +375,7 @@ catch (std::out_of_range) {
 void Parser::Delete(vector<string> args){
     //delete from tablename where a<>'sda' and b<='ads' and c>=12 and d=12.4;
     //0      1     2        3      4
-try{
+    try{
     if(args.at(1)!="from"){ throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");}
     string tablename=args.at(2);
     if(args.at(3)!="where"){ throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");}
@@ -428,11 +420,7 @@ try{
     auto itr=conditions.begin();
     for(;itr!=conditions.end();itr++){
         cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
-        switch(itr->val.type.type){
-            case AType::Integer: cout<<"int "<<itr->val.i;break;
-            case AType::Float: cout<<"float "<<itr->val.f;break;
-            case AType::String: cout<<"string "<<itr->val.str;break;
-        }
+        cout<<itr->val.toStr();
         cout<<endl;
     }
    
@@ -443,8 +431,8 @@ try{
     int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
     std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
-}
-catch (std::out_of_range) {
+    }
+    catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");
     }
 }
