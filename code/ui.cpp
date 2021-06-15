@@ -7,4 +7,3 @@ int main(){
     interpreter inter;
     inter.Loop();
 }
-// ui
