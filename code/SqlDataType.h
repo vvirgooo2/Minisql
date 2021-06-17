@@ -98,6 +98,7 @@ struct condition{
 
 //存储表的数据结构
 struct Table{
+    string tablename;
     vector<string> attri_names;        //各列的名字
     vector<attri_type> attri_types;    //各列属性
     vector<pair<string,string>> index; //属性名-索引名
