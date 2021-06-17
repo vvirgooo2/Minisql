@@ -16,6 +16,7 @@ private:
     void Create_index(vector<string> args);
     void Drop_index(vector<string> args);
     void Select(vector<string> args);
+    void Selectpart(vector<string> args);
     void Delete(vector<string> args);
     void Insert(vector<string> args);
     void Execfile(vector<string> args);

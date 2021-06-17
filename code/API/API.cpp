@@ -1,6 +1,7 @@
 #include "API.h"
 #include"../SqlDataType.h"
 #include"../interpreter/interpreter.h"
+#include"../RecordManager/RecordManager.h"
 #include<vector>
 #include<string>
 using namespace std;
@@ -34,12 +35,20 @@ void API_drop_index(string indexname){
     
 }
 
-//选择（全选），部分选择全选弄好后再加
+//选择（全选）
 //判断表名，判断条件是否合理
 //传给record
 void API_select(string tablename, vector<condition> conditions){
     cout<<"API Select"<<endl;
 }
+
+//选择（部分）
+//判断属性名，条件的合理性
+//注意属性名参数只有name成员被赋值了
+void API_selectpart(vector<attri_type> attris, string tablename, vector<condition> conditions){
+    cout<<"API Selectpart"<<endl;
+}
+
 
 //插入
 //判断表名

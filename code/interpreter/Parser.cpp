@@ -60,9 +60,19 @@ void Parser::decode(vector<string> args){
     else if(args.at(0)=="drop"&&args.size()>=2&&args.at(1)=="table")   Drop_table(args);
     else if(args.at(0)=="create"&&args.size()>=2&&args.at(1)=="index") Create_index(args);
     else if(args.at(0)=="drop"&&args.size()>=2&&args.at(1)=="index")   Drop_index(args);
-    else if(args.at(0)=="select")                      Select(args);
+    else if(args.at(0)=="select"&&args.size()>=2&&args.at(1)=="*" )    Select(args);
+    else if(args.at(0)=="select"&&args.size()>=2&&args.at(1)!="*" )    Selectpart(args);
     else if(args.at(0)=="insert")                      Insert(args);
     else if(args.at(0)=="delete")                      Delete(args);
+
+
+
+
+
+
+
+
+    
     else if(args.at(0)=="execfile")                    Execfile(args);
     else {
         cout<<"Unknown instruction."<<endl;
@@ -313,6 +323,94 @@ void Parser::Select(vector<string> args){
     //检查可以放到API里面
     auto start_time = std::chrono::high_resolution_clock::now();
     API_select(tablename,conditions);
+    auto finish_time = std::chrono::high_resolution_clock::now();
+    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    if (tempTime == 0) tempTime = 10;
+    std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+    }
+    catch (std::out_of_range) {
+        throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");
+    }
+}
+
+void Parser::Selectpart(vector<string> args){
+    //select a1 a2 from tablename where a<>'sda' and b<='ads' and c>=12 and d=12.4;
+    // 0     1   2    3        4    5
+    try{
+    int i=1;
+    vector<attri_type> s_attris;
+    while(args.at(i)!="from"){
+        attri_type selecta;
+        selecta.attri_name =args.at(i++);
+        s_attris.push_back(selecta);
+    }
+    string tablename=args.at(++i);
+    vector<condition> conditions; 
+    
+    if(args.size()==i+1){
+        auto start_time = std::chrono::high_resolution_clock::now();
+        API_selectpart(s_attris,tablename,conditions);
+        auto finish_time = std::chrono::high_resolution_clock::now();
+        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        if (tempTime == 0) tempTime = 10;
+        std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+        return;
+    }
+    if(args.at(++i)!="where") {throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");}
+    i++;
+    while(1){
+        condition con;
+        //name
+        con.name=args.at(i++);
+        //op
+        if(args.at(i)=="=")  con.op=0;
+        else if(args.at(i)=="<"&&args.at(i+1)==">") { con.op=1; i++;}
+        else if(args.at(i)=="<"&&args.at(i+1)=="=") { con.op=5; i++;}
+        else if(args.at(i)=="<")    con.op=4;
+        else if(args.at(i)==">"&&args.at(i+1)=="=") { con.op=3; i++;}
+        else if(args.at(i)==">")                    con.op=2;
+        else { cout<<"syntax error!"<<endl; return;}
+        i++;
+        //sqlvalue
+        string value=args.at(i);
+        if(value.at(0)=='\''&&value.at(value.length()-1)=='\''){
+            con.val.type.type=AType::String;
+            con.val.type.attri_name=con.name;
+            con.val.str=value.substr(1,value.length()-2);
+        }
+        else if(value.find('.')!=string::npos){  //fraction
+            con.val.f=stof(value);
+            con.val.type.type=AType::Float;
+            con.val.type.attri_name=con.name;
+        }
+        else{      //int
+            con.val.i=stoi(value);
+            con.val.type.type=AType::Integer;
+            con.val.type.attri_name=con.name;
+        }
+        conditions.push_back(con);
+        if(i==(int)args.size()-1) break;
+        else if(args.at(i+1)=="and") i+=2;
+        else break;
+    }
+    //debug
+    auto tr=s_attris.begin();
+    cout<<"select: ";
+    for(;tr!=s_attris.end();tr++){
+        cout<<tr->attri_name<<" ";
+    }
+    cout<<endl;
+    auto itr=conditions.begin();
+    for(;itr!=conditions.end();itr++){
+        cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
+        cout<<itr->val.toStr();
+        cout<<endl;
+    }
+    //检查表，检查参数模块没有
+    //这里有点问题，应该还要对照表的列属性对比检查一遍
+    //检查可以放到API里面
+    auto start_time = std::chrono::high_resolution_clock::now();
+    API_selectpart(s_attris, tablename,conditions);
     auto finish_time = std::chrono::high_resolution_clock::now();
     int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
