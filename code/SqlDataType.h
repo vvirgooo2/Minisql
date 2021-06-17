@@ -52,6 +52,41 @@ struct sqlvalue{
                 return str;
         }
     }
+    void reset(){
+        str.clear();
+        i = 0;
+        r = 0;
+    }
+    //操作符重载，可利用操作符比较sqlvalue
+    bool operator<(const sqlvalue &e) const{
+        switch(type.type){
+            case AType::Integer: return i<e.i;
+            case AType::Float:   return f<e.f;
+            case AType::String:  return str<e.str;
+            default: throw std::runtime_error("Undefined Type!");
+        }
+    }
+    bool operator==(const sqlvalue &e) const{
+        switch(type.type){
+            case AType::Integer: return i==e.i;
+            case AType::Float:   return f==e.f;
+            case AType::String:  return str==e.str;
+            default: throw std::runtime_error("Undefined Type!");
+        }
+    }
+    bool operator!=(const sqlvalue &e) const{
+        return !operator==(e);
+    }
+    bool operator>(const sqlvalue &e) const{
+        return !operator<(e)&&operator!=(e);
+    }
+    bool operator<=(const sqlvalue &e) const{
+        return operator<(e) || operator==(e);
+    }
+    bool operator>=(const sqlvalue &e) const{
+        return !operator<(e);
+    }
+
 };
 
 //用来存储条件 例如 where ID = '123'
@@ -81,13 +116,14 @@ struct Result{
 //一行元组
 struct Tuple{
     vector<sqlvalue> element; //存sqlvalue型的一行的值
+    //选出所需要的列
     Row fetchRow(const std::vector<std::string> &attrTable, const std::vector<std::string> &attrFetch) const {
             Row row;
             bool attrFound;
             row.col.reserve(attrFetch.size());
             for (auto fetch : attrFetch) {
                 attrFound = false;
-                for (int i = 0; i < attrTable.size(); i++) {
+                for (size_t i = 0; i < attrTable.size(); i++) {
                     if (fetch == attrTable[i]) {
                         row.col.push_back(element[i].toStr());
                         attrFound = true;
