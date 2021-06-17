@@ -45,7 +45,7 @@ void API_select(string tablename, vector<condition> conditions){
 //选择（部分）
 //判断属性名，条件的合理性
 //注意属性名参数只有name成员被赋值了
-void API_selectpart(vector<attri_type> attris, string tablename, vector<condition> conditions){
+void API_selectpart(vector<string> attris, string tablename, vector<condition> conditions){
     cout<<"API Selectpart"<<endl;
 }
 

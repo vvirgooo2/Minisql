@@ -338,10 +338,10 @@ void Parser::Selectpart(vector<string> args){
     // 0     1   2    3        4    5
     try{
     int i=1;
-    vector<attri_type> s_attris;
+    vector<string> s_attris;
     while(args.at(i)!="from"){
-        attri_type selecta;
-        selecta.attri_name =args.at(i++);
+        string selecta;
+        selecta=args.at(i++);
         s_attris.push_back(selecta);
     }
     string tablename=args.at(++i);
@@ -397,7 +397,7 @@ void Parser::Selectpart(vector<string> args){
     auto tr=s_attris.begin();
     cout<<"select: ";
     for(;tr!=s_attris.end();tr++){
-        cout<<tr->attri_name<<" ";
+        cout<<*tr<<" ";
     }
     cout<<endl;
     auto itr=conditions.begin();
