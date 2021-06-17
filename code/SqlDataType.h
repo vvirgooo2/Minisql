@@ -55,7 +55,7 @@ struct sqlvalue{
     void reset(){
         str.clear();
         i = 0;
-        r = 0;
+        f = 0;
     }
     //操作符重载，可利用操作符比较sqlvalue
     bool operator<(const sqlvalue &e) const{
