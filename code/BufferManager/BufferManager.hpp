@@ -37,7 +37,7 @@ class BufferManage
     Block *Buffer_pool;
 public:
     BufferManage();
-    Block* get_block(string TableName, int BlockId);  // 单条记录的处理只需要提供相应的块即可
+    Block* get_block(string TableName, int BlockId, bool is_insert);  // 单条记录的处理只需要提供相应的块即可
     Block* ret_block(Block* blk);  // 返回处理过的块，如果该块没有被修改，返回null
 };
 
