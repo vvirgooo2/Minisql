@@ -10,6 +10,7 @@ using namespace std;
 /*这个头文件主要定义一些数据结构来存储表，条件，属性，sql值等信息*/
 #define MAX_TableName 128
 #define MAX_BlockNumber 10000
+#define PAGE_SIZE 4096
 
 //属性枚举类型
 enum class AType{
