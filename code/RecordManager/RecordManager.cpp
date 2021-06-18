@@ -7,7 +7,7 @@ void RecordManager::print(const Result &res) const{ //打印结果
 //检查元组是否符合条件
 bool RecordManager::validCheck(const vector<condition> conditions, const Tuple tu, const vector<string> attris)
 {
-
+    
 }
     
 //从内存中读取元组

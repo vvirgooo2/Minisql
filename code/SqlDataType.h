@@ -7,6 +7,7 @@
 #include<string>
 using namespace std;
 /*这个头文件主要定义一些数据结构来存储表，条件，属性，sql值等信息*/
+#define MAX_TableName 128
 
 //属性枚举类型
 enum class AType{
@@ -138,4 +139,36 @@ struct Tuple{
             return row;
         }
 };
+
+
+// 读内存块的时候，默认的是char(n)类型的要存n+1个字节
+class Block
+{
+private:
+    /* 硬盘上的储存格式是128字节表名，4字节的表内块索引，为了对齐，
+     * 我们定义磁盘上前256个字节为块头，从第257个字节开始存储记录的信息
+     * 解析外存时就按照这个规则还原tablename, bolckid和data_begin指针*/
+    string tablename;
+    int block_id;
+    int next_blank_to_be_written;
+    char* data_begin;  // 有效记录的首地址
+public:
+    Block();
+};
+
+Block::Block()
+{
+}
+
+Block::~Block()
+{
+}
+
+
+
+
+
+
+
+
 #endif

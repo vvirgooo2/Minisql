@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iterator>
 #include "../SqlDataType.h"
+#define MAX_TableName 128  // 表名最长128字节
 using namespace std;
 
 class RecordManager{
