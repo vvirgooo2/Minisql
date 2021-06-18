@@ -1,6 +1,12 @@
 #include "BufferManager.hpp"
 using namespace std;
 
+Block::Block()
+{
+    
+}
+
+
 bool BlockAttr::operator==(const BlockAttr & x) const 
 {
     return tablename == x.tablename && block_id == x.block_id;
@@ -10,8 +16,6 @@ size_t hashfunc::operator()(const BlockAttr & x) const
 {
 	return hash<string>()(x.tablename) ^ hash<int>()(x.block_id);
 }
-
-
 
 BlockAttr::BlockAttr(string TableName, int BlockId)
 {
@@ -45,8 +49,18 @@ Block* BufferManage::get_block(string TableName, int BlockId, bool is_insert)
             (*BlockInfo).pop_back();
             // erase the last in unordered_map
             (*Hash_info).erase(last);
-            // swap the new 
+            
+            /*** insertion: ***/
+            if(is_insert)
+            {
+                // create new 
+            }
         }
+    }
+    // present in buffer 
+    else
+    {
+        /*** insertion ***/
     }
 }
 

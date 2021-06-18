@@ -6,11 +6,15 @@ using namespace std;
 // 读内存块的时候，默认的是char(n)类型的要存n+1个字节
 class Block
 {
+/* 我们定义磁盘上前4个字节为块头，从第5个字节开始存储记录的信息
+ * 解析外存时就按照这个规则还原is_full 和data_begin指针*/
 private:
+    int is_full;  // 判断块是否已满
     char* data_begin;  // 有效记录的首地址
 public:
     Block();
     char * fetch_begin();  // 得到可写首地址的函数
+    void set_full();  // block.set_full() 调用后会使得本块的is_full变为1
 };
 
 struct BlockAttr
@@ -37,7 +41,8 @@ class BufferManage
     Block *Buffer_pool;
 public:
     BufferManage();
-    Block* get_block(string TableName, int BlockId, bool is_insert);  // 单条记录的处理只需要提供相应的块即可
+    // 单条记录的处理只需要提供相应的块即可，is_insert决定此次的块操作类型
+    Block* get_block(string TableName, int BlockId, bool is_insert);  
     Block* ret_block(Block* blk);  // 返回处理过的块，如果该块没有被修改，返回null
 };
 
