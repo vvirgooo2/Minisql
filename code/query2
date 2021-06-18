@@ -1,0 +1,12 @@
+
+insert into student2 values(1080100001,'name1',62.0);
+insert into student2 values(1080100002,'name2',76.5);
+insert into student2 values(1080100003,'name3',68.0);
+insert into student2 values(1080100004,'name4',96.5);
+insert into student2 values(1080100005,'name5',93.5);
+insert into student2 values(1080100006,'name6',87.5);
+insert into student2 values(1080100007,'name7',78.5);
+insert into student2 values(1080100008,'name8',73.0);
+insert into student2 values(1080100009,'name9',75.5);
+
+select * from student2;

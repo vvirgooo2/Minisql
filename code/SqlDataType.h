@@ -53,7 +53,10 @@ struct sqlvalue{
                 return to_string(f);
             case AType::String:
                 return str;
+            default:
+                return "error";
         }
+        return "error";
     }
     void reset(){
         str.clear();
