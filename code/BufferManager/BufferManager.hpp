@@ -46,7 +46,9 @@ public:
     Block* ret_block(Block* blk);  // 返回处理过的块，如果该块没有被修改，返回null
 };
 
-
+// belows are disk operating functions
+Block* fetch_block_disk(BlockAttr* attr);
+Block* alloc_block_disk(BlockAttr* attr);  // ???
 
 #endif
 
