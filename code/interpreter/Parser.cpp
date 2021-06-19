@@ -64,15 +64,6 @@ void Parser::decode(vector<string> args){
     else if(args.at(0)=="select"&&args.size()>=2&&args.at(1)!="*" )    Selectpart(args);
     else if(args.at(0)=="insert")                      Insert(args);
     else if(args.at(0)=="delete")                      Delete(args);
-
-
-
-
-
-
-
-
-    
     else if(args.at(0)=="execfile")                    Execfile(args);
     else {
         cout<<"Unknown instruction."<<endl;
@@ -87,10 +78,6 @@ void Parser::Create_table(vector<string> args){
     // create table tablename ( name int , name float, name char ( length ) , primary key ( name ) )
     try{
     string tablename=args.at(2);
-    /*test*/
-    cout<<"table name: ";
-    cout<<tablename<<endl;
-
     int i=3;
     if(args.at(i++)!="(") throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax! (create table)");
     vector<attri_type> attris;
@@ -143,7 +130,7 @@ void Parser::Create_table(vector<string> args){
         else i++;
     }
     
-    //debug part
+    /*debug part
     for(auto itr=attris.begin();itr!=attris.end();itr++){
         cout<<itr->attri_name<<" ";
         switch(itr->type){
@@ -156,7 +143,7 @@ void Parser::Create_table(vector<string> args){
         if(itr->primary) cout<<"  primary ";
         if(itr->unique) cout<<"  unique  ";
         cout<<endl;
-    }
+    }*/
     /*  调用API,传入表名和各属性  */
     auto start_time = std::chrono::high_resolution_clock::now();
     API_create_table(tablename,attris);
@@ -176,12 +163,6 @@ void Parser::Drop_table(vector<string> args){
     tablename=args.at(2);
     if(args.size()>3) { throw std::runtime_error("SYNTAX ERROR: You can only drop one table once");}
     else {
-        cout<<"API drop table "<<tablename<<endl;
-        //在删除之前测试有没有这张表
-        //CatalogManager_exist(tablename);
-        /* 调用API，只有一个表名作参数
-        
-        */
         auto start_time = std::chrono::high_resolution_clock::now();
         API_drop_table(tablename);
         auto finish_time = std::chrono::high_resolution_clock::now();
@@ -239,12 +220,10 @@ void Parser::Drop_index(vector<string> args){
     if(args.size()>3) { throw std::runtime_error("SYNTAX ERROR: You can only drop one index once");}
     else {
         cout<<"API drop index "<<indexname<<endl;
-        /* 调用API，只有一个表名作参数
-        测试有没有这个索引
-        IndexManager_exist(indexname);
-        */
         auto start_time = std::chrono::high_resolution_clock::now();
+        //
         API_drop_index(indexname);
+        //
         auto finish_time = std::chrono::high_resolution_clock::now();
         int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
@@ -267,7 +246,7 @@ void Parser::Select(vector<string> args){
     //没有条件
     if(args.size()==4){
         auto start_time = std::chrono::high_resolution_clock::now();
-        //API_select(tablename,conditions);
+        API_select(tablename,conditions);
         auto finish_time = std::chrono::high_resolution_clock::now();
         int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
@@ -311,13 +290,13 @@ void Parser::Select(vector<string> args){
         else if(args.at(i+1)=="and") i+=2;
         else break;
     }
-    //debug
+    /*/debug
     auto itr=conditions.begin();
     for(;itr!=conditions.end();itr++){
         cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
         cout<<itr->val.toStr();
         cout<<endl;
-    }
+    }*/
     //检查表，检查参数模块没有
     //这里有点问题，应该还要对照表的列属性对比检查一遍
     //检查可以放到API里面
@@ -393,7 +372,7 @@ void Parser::Selectpart(vector<string> args){
         else if(args.at(i+1)=="and") i+=2;
         else break;
     }
-    //debug
+    /*debug
     auto tr=s_attris.begin();
     cout<<"select: ";
     for(;tr!=s_attris.end();tr++){
@@ -405,10 +384,8 @@ void Parser::Selectpart(vector<string> args){
         cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
         cout<<itr->val.toStr();
         cout<<endl;
-    }
-    //检查表，检查参数模块没有
-    //这里有点问题，应该还要对照表的列属性对比检查一遍
-    //检查可以放到API里面
+    }*/
+
     auto start_time = std::chrono::high_resolution_clock::now();
     API_selectpart(s_attris, tablename,conditions);
     auto finish_time = std::chrono::high_resolution_clock::now();
@@ -451,12 +428,12 @@ void Parser::Insert(vector<string> args){
         else i++;
         if(args.at(i)==")") break;
     }
-    //debug
+    /*debug
     auto itr=value_list.begin();
     for(;itr!=value_list.end();itr++){
         cout<<itr->toStr();
         cout<<endl;
-    }
+    }*/
     
     auto start_time = std::chrono::high_resolution_clock::now();
     API_insert(tablename,value_list);
@@ -478,6 +455,9 @@ void Parser::Delete(vector<string> args){
     string tablename=args.at(2);
     if(args.at(3)!="where"){ throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");}
     vector<condition> conditions;
+    if(args.size()==4){
+
+    }
     int i=4;
     while(1){
         condition con;
@@ -514,13 +494,13 @@ void Parser::Delete(vector<string> args){
         else if(args.at(i+1)=="and") i+=2;
         else break;
     }
-    //debug
+    /*debug
     auto itr=conditions.begin();
     for(;itr!=conditions.end();itr++){
         cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
         cout<<itr->val.toStr();
         cout<<endl;
-    }
+    }*/
    
     //call API and timer
     auto start_time = std::chrono::high_resolution_clock::now();

@@ -57,7 +57,10 @@ struct sqlvalue{
                 return to_string(f);
             case AType::String:
                 return str;
+            default:
+                return "error";
         }
+        return "error";
     }
     void reset(){
         str.clear();
@@ -144,6 +147,35 @@ struct Tuple{
             }
             return row;
         }
+};
+
+// 读内存块的时候，默认的是char(n)类型的要存n+1个字节
+class Block
+{
+private:
+    char* data_begin;  // 有效记录的首地址
+public:
+    Block();
+    char * fetch_begin();  // 得到可写首地址的函数
+};
+
+struct BlockAttr
+{
+    string tablename;
+    int block_id;
+};
+
+
+class BufferManage
+{
+    /* 记录了内存中的block信息，buffer managerment
+     *据此在buffer pool(实际上是数组)里面找块的索引
+     */
+    list<BlockAttr> BlockInfo; //elements in the buffer
+    Block Buffer_pool[MAX_BlockNumber];
+public:
+    Block* get_block(string TableName, int BlockId);  // 单条记录的处理只需要提供相应的块即可
+    Block* ret_block(Block* blk);  // 返回处理过的块，如果该块没有被修改，返回null
 };
 
 #endif
