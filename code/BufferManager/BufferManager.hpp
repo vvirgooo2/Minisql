@@ -34,7 +34,7 @@ struct hashfunc
 class BufferManage
 {
     /* 记录了内存中的block信息，buffer managerment
-     *据此在buffer pool(实际上是数组)里面找块的索引
+     * 据此在buffer pool(实际上是数组)里面找块的索引
      */
     list<BlockAttr>* BlockInfo; //elements in the buffer
     unordered_map<BlockAttr, list<BlockAttr>::iterator, hashfunc>* Hash_info;
@@ -42,7 +42,7 @@ class BufferManage
 public:
     BufferManage();
     // 单条记录的处理只需要提供相应的块即可，is_insert决定此次的块操作类型
-    Block* get_block(string TableName, int BlockId, bool is_insert);  
+    Block* get_block(string TableName, int BlockId, int operation);  
     Block* ret_block(Block* blk);  // 返回处理过的块，如果该块没有被修改，返回null
 };
 
