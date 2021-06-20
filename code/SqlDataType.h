@@ -28,7 +28,7 @@ struct attri_type{
     bool primary=false;
     string attri_name;
 
-    AType type; 
+    AType type;
     int char_sz=0; //0-255
 
     int getsize(){
@@ -102,8 +102,8 @@ struct sqlvalue{
 //用来存储条件 例如 where ID = '123'
 struct condition{
     string name;  //属性名
-    int op;       //0= 1<> 2> 3>= 4< 5<= 
-    sqlvalue val; 
+    int op;       //0= 1<> 2> 3>= 4< 5<=
+    sqlvalue val;
 };
 
 //存储表的数据结构
@@ -148,6 +148,47 @@ struct Tuple{
             return row;
         }
 };
-
+/* class Position and IndexInfo are the 2 data structures that exchanging information between Record Manager*/
+//Position contain the
+class Position
+{
+    public:
+        int blockID;
+        int offset;//don't count the valid bit into it
+        void clear()
+        {
+            blockID = 0;
+            offset = 0;
+        }
+};
+//data structure that interact with index manager
+template <typename T>
+class IndexInfo
+{
+    public:
+        int capacity; //the number of keys preview
+        int size; //the number of keys
+        int key_maxsize; // the size of the key
+        AType type;
+        T* keys;
+        Position *p;
+        string tablename, attr_name;
+        IndexInfo(const string &tablename, int capacity, const string& attr_name, AType type, const int key_maxsize)
+        :capacity(capacity), tablename(tablename), attr_name(attr_name), type(type), size(0), key_maxsize(key_maxsize)
+        {
+            keys = new T[capacity];
+            p = new Position[capacity];
+        }
+        ~IndexInfo(){
+            delete keys;
+            delete p;
+        };
+        void AddKey(const T key, const int blockid, const int offset)
+        {
+            keys[size] = key;
+            p[size].blockID = blockid;
+            p[size++].offset = offset;
+        }
+};
 
 #endif
