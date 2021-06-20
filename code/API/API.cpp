@@ -2,10 +2,14 @@
 #include"../SqlDataType.h"
 #include"../interpreter/interpreter.h"
 #include"../RecordManager/RecordManager.h"
+#include"../IndexManager/IndexManager.h"
+#include"../BufferManager/BufferManager.h"
 #include<vector>
 #include<string>
 using namespace std;
 RecordManager *rm;
+BufferManage bm;
+IndexManager im;
 Table get_test_table(){
  //属性
     vector<attri_type> attris;
@@ -91,7 +95,7 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
 //判断表名
 //预处理值表（判断和表是否对应）,一定要把string的长度填充上！！！！！！
 //调用record的select或索引判断主键或unique键的冲突
-//无问题给record插入
+//无问题给record插入，顺便同步给index
 void API_insert(string tablename,vector<sqlvalue> value_list){
     Tuple t;
     t.element=value_list;
@@ -104,7 +108,7 @@ void API_insert(string tablename,vector<sqlvalue> value_list){
 //删除
 //判断表名
 //预处理条件
-//给record删除
+//给record删除，同步index
 void API_delete(string tablename,vector<condition> conditions){
 
 }

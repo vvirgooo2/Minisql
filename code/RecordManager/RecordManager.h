@@ -24,13 +24,15 @@ public:
     //删除表文件
     bool dropTable(const string tablename);
     //查找记录,返回条数,无索引
-    int  selectRecord(const Table &table, const vector<string> &attr, const vector<condition> conditions);
+    int  selectRecord(const Table &table, const vector<string> &attr, const vector<condition> conditions,bool output=false);
     //查找记录，返回条数，有索引
-    int  selectRecord_index(const Table &table, const vector<string> &attr, const vector<condition> conditions,const condition indexcon);
+    int  selectRecord_index(const Table &table, const vector<string> &attr, const vector<condition> conditions,const condition indexcon,bool output=false);
     //插入记录
     bool insertRecord(const Table &table, const Tuple &record);
     //删除记录
     bool deleteRecord(const Table &table, const vector<condition> conditions);
+    //创建索引
+    bool CreateIndex(const Table &table, const attri_type indexattr,const vector<string> indexname);
 };
 
 

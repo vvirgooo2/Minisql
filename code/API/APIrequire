@@ -1,0 +1,11 @@
+关于一些操作需要在API中提前做的事情：
+1、insert的时候，通过index判断主键是否重复，若unique键有索引，也利用索引来判断，否则
+通过select（output=false）来判断是否重复
+
+2、删除的时候，检查有没有索引（这次验收估计没有删除特定项的，偷懒不写了）
+
+3、查找判断有没有有索引的条件，从而选择适当的select函数，一定传入输出参数为1
+
+4、索引同步：每insert一条，由record给 index insert key
+            删除，由record给index deletekey
+            创建索引先调用创建文件，然后调用record的createindex
