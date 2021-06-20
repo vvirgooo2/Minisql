@@ -207,7 +207,7 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
         }
     }
     //if(4096-(block-B.fetch_begin())<length) {
-    //    将该块标记为已满
+    //    B.set_full();
     //}
     //ret_block(B);
     return true;

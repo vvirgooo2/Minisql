@@ -90,7 +90,8 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
 //插入
 //判断表名
 //预处理值表（判断和表是否对应）,一定要把string的长度填充上！！！！！！
-//给record插入
+//调用record的select或索引判断主键或unique键的冲突
+//无问题给record插入
 void API_insert(string tablename,vector<sqlvalue> value_list){
     Tuple t;
     t.element=value_list;
