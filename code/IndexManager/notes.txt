@@ -1,0 +1,18 @@
+1. 写的时候随记，没啥用，可不看
+
+offset不考虑valid bit
+blockID是int型
+创建索引需要
+数据通过一个指针传过来
+里面是对应的blockID，offset和value
+规定一个数据结构吧
+getposition，需要判断index是否存在
+error throw runtime_error
+与catalog manager,
+指针数据有问题
+能否创建index的判断交给unique，catalog manager或者record manager做
+记得把vector<Position>用完后delete掉
+加B+树的删除key操作
+
+B树的全部删除
+fisrt的更新，既然每次都左移，那第一次建立的节点，即first永远不会被删除

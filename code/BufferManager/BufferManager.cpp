@@ -3,114 +3,122 @@ using namespace std;
 
 Block::Block()
 {
-    is_full = 0;
+    BlockId = -1; // mark the block is empty
+    data_begin = new char[BLOCK_SIZE-HEADER_SIZE];
+    memset(data_begin, 0, (BLOCK_SIZE-HEADER_SIZE)*sizeof(char));
+}
+
+Block::Block(string tn, int bi)
+{
+    TableName = tn;
+    BlockId = bi;
     data_begin = new char[BLOCK_SIZE];
 }
 
-void Block::set_full()
+bool Block::is_empty()
 {
-    is_full = 1; return ;
+    return BlockId >= 0;
 }
-
-char* Block::fetch_begin()
-{
-    return data_begin;
-}
-
-BlockAttr::BlockAttr(string TableName, int BlockId)
-{
-    tablename = TableName;
-    block_id = BlockId;
-}
-
-bool BlockAttr::operator==(const BlockAttr & x) const 
-{
-    return tablename == x.tablename && block_id == x.block_id;
-}
-
-size_t hashfunc::operator()(const BlockAttr & x) const
-{
-	return hash<string>()(x.tablename) ^ hash<int>()(x.block_id);
-}
-
 
 BufferManage::BufferManage()
 {
-    // allocate vector pointer
-    BlockInfo = new list<BlockAttr>;
-    Hash_info = new unordered_map<BlockAttr, list<BlockAttr>::iterator, hashfunc>;
-
-    // allocate space for Bufferpool
+    // allocate block pointer
     Buffer_pool = new Block[MAX_BlockNumber];
-}
-
-Block* BufferManage::get_block(string TableName, int BlockId, int operation)
-{
-    /*this function is called when inserting, deleting or selecting*/
-    BlockAttr* attr = new BlockAttr(TableName, BlockId);
-    Block* result;
-
-    /**************** select *****************/
-    if(operation == SELECT_OP)
+    // empty the buffer_pool
+    for (int i = 0; i < MAX_BlockNumber; i++)
     {
-        // not present in buffer
-        if((*Hash_info).find(*attr) == (*Hash_info).end())
-        {
-            // no such block found in buffer, turn to disk for help
-            result = fetch_block_disk(attr);
-            // even not in disk, return failure and maintain current status
-            if(!result) return NULL;
-
-            // if the buffer pool is full, delete the least recently used block
-            if((*Hash_info).size() == MAX_BlockNumber)
-            {
-                // grab least recently refered block
-                BlockAttr last = (*BlockInfo).back();
-                // delete the last block from BlockInfo
-                (*BlockInfo).pop_back();
-                // erase the last in unordered_map according to the key
-                (*Hash_info).erase(last);
-            }
-            // update buffer pool(bring the most recently used block to the front of the list)
-            (*BlockInfo).push_front(*attr);
-            (*Hash_info)[*attr] = (*BlockInfo).begin();
-        }
-
-    }
-
-    /**************** insert ****************/
-    else if(operation == INSERT_OP)
-    {
-        // if buffer is full, swap it out using LRU scheme
-        if((*Hash_info).size() == MAX_BlockNumber)
-        {
-            // grab least recently refered block
-            BlockAttr last = (*BlockInfo).back();
-            // delete the block from BlockInfo
-            (*BlockInfo).pop_back();
-            // erase the last in unordered_map
-            (*Hash_info).erase(last);
-            
-        }
+        Buffer_pool[i].BlockId = -1;
     }
     
 }
 
-Block* BufferManage::ret_block(Block* blk)
+Block* BufferManage::get_block(string TableName, int BlockId)
 {
-    // deletion: blk == NULL
+    /*this function is called when inserting, deleting or selecting*/
+
+    // present in buffer
+    for (int i = 0; i < MAX_BlockNumber; i++)
+    {
+        if(Buffer_pool[i].TableName == TableName && Buffer_pool[i].BlockId == BlockId)
+        {
+            return &(Buffer_pool[i]);
+        }
+    }
+    // not present in buffer
+    return fetch_block_disk(TableName, BlockId);
+}
+
+void BufferManage::ret_block(Block* blk)
+{
+    string TableName = blk->TableName;
+    int BlockId = blk->BlockId;
+    bool in_buffer = false;
+    // blk can be NULL
+    // if in buffer, find and update it
+    for (int i = 0; i < MAX_BlockNumber; i++)
+    {
+        if(Buffer_pool[i].TableName == TableName && Buffer_pool[i].BlockId == BlockId)
+        {
+            in_buffer = true;
+            Buffer_pool[i] = *blk;
+        }
+    }
+    // not present in buffer, insert it into the buffer
+    if(!in_buffer)
+    {
+        bool is_available = false;
+        for (int i = 0; i < MAX_BlockNumber; i++)
+        {
+            if(Buffer_pool[i].is_empty())
+            {
+                is_available = true;
+                Buffer_pool[i] = *blk;
+            }
+        }
+        // if buffer is full, overwrite the first one to lay the bew block
+        Buffer_pool[0] = *blk;   
+    }
+
+    // write to disk
+    write_block_disk(blk);
+}
+
+void write_block_disk(Block*blk)
+{
+    string TableName = blk->TableName;
+    int BlockId = blk->BlockId;
+    char* data = blk->data_begin;
+
+    filebuf f;
+    f.open(TableName, ios::in | ios::out);
+    istream fin(&f);
+    ostream fout(&f);
+    fout.seekp(BlockId*BLOCK_SIZE);
+    fout << TableName << BlockId;
+    for (int i = 0; i < BLOCK_SIZE-HEADER_SIZE; i++)
+    {
+        fout << data[i];
+    }
+    return ;    
 }
 
 
+Block* fetch_block_disk(string TableName, int BlockId)
+{
+    filebuf f;
+    f.open(TableName, ios::in | ios::out);
+    istream fin(&f);
+    ostream fout(&f);
 
+    // create new block to return to the caller
+    Block* result;
+    result = new Block(TableName, BlockId);
 
-
-
-
-
-
-
-
-
-
-
+    fin.seekg(BlockId * BLOCK_SIZE + HEADER_SIZE);
+    // read into databegin byte by byte, (BSize-HSize) in total
+    for (int i = 0; i < BLOCK_SIZE-HEADER_SIZE; i++)
+    {
+        fin >> (result->data_begin)[i];
+    }
+    return result;
+}
