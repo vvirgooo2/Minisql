@@ -121,12 +121,15 @@ int  RecordManager::selectRecord(const Table &table, const vector<string> &attr,
     int blockID=0;
     Block *B=bm.get_block(table.tablename,blockID);
     char* block=B->data_begin;
+    block=blockBuffer;
     //output attris
-    cout<<" | ";
-    for(auto itr=attr.begin(); itr!= attr.end();itr++){
-        cout<<*itr<<" | ";
+    if(output){
+        cout<<" | ";
+        for(auto itr=attr.begin(); itr!= attr.end();itr++){
+            cout<<*itr<<" | ";
+        }
+        cout<<endl;
     }
-    cout<<endl;
 
     Tuple t;
     Result res;
@@ -157,11 +160,13 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
     vector<Position> positions;
     positions=im.GetPosition(table.tablename,indexcon);
 
-    cout<<" | ";
-    for(auto itr=attr.begin(); itr!= attr.end();itr++){
-        cout<<*itr<<" | ";
+    if(output){
+        cout<<" | ";
+        for(auto itr=attr.begin(); itr!= attr.end();itr++){
+            cout<<*itr<<" | ";
+        }
+        cout<<endl;
     }
-    cout<<endl;
 
     //先用索引信息定位，然后进一步判断
     auto itr=positions.begin();
@@ -173,8 +178,8 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
         char *block=B->data_begin;
         readTuple(block,itr->offset,table.attri_types,t);
         if(validCheck(conditions,t)){
-                r=t.fetchRow(table.attri_names,attr);
-                res.row.push_back(r);
+            r=t.fetchRow(table.attri_names,attr);
+            res.row.push_back(r);
         }
     }
     if(output) print(res);
@@ -188,6 +193,7 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
     //怎么get到最后一块
     Block *B=bm.get_block(table.tablename,blockID);
     char* block=B->data_begin;
+    block=blockBuffer;
     Position pos;
     int length = 1;
     //计算每条记录的length

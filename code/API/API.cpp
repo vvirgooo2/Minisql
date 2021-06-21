@@ -42,7 +42,6 @@ Table get_test_table(){
 
 }
 
-
 //API层建表
 //功能：
 //先判断有无表名冲突
@@ -78,7 +77,7 @@ void API_drop_index(string indexname){
 //传给record
 void API_select(string tablename, vector<condition> conditions){
     Table table=get_test_table();
-    rm->selectRecord(table,table.attri_names,conditions);
+    rm->selectRecord(table,table.attri_names,conditions,true);
 
 }
 
@@ -87,7 +86,7 @@ void API_select(string tablename, vector<condition> conditions){
 //注意属性名参数只有name成员被赋值了
 void API_selectpart(vector<string> attris, string tablename, vector<condition> conditions){
     Table table=get_test_table();
-    rm->selectRecord(table,attris,conditions);
+    rm->selectRecord(table,attris,conditions,true);
 }
 
 
