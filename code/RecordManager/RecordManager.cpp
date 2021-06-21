@@ -282,6 +282,7 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
     
     Block *B=bm.get_block(table.tablename,blockID);
     char *block=B->data_begin;
+    block=blockBuffer;
     
     Tuple t;
     
@@ -310,11 +311,12 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
             }
         }
         blockID++;
-        //block=NULL;
+        
         bm.ret_block(B);
         //怎么判断是最后一块
         B=bm.get_block(table.tablename,blockID);
         block=B->data_begin;
+        block=NULL;
     }
     return true;
 }

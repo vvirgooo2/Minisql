@@ -109,5 +109,6 @@ void API_insert(string tablename,vector<sqlvalue> value_list){
 //预处理条件
 //给record删除，同步index
 void API_delete(string tablename,vector<condition> conditions){
-
+    Table table=get_test_table();
+    rm->deleteRecord(table,conditions);
 }

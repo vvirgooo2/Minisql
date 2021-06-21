@@ -453,10 +453,14 @@ void Parser::Delete(vector<string> args){
     try{
     if(args.at(1)!="from"){ throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");}
     string tablename=args.at(2);
-    if(args.at(3)!="where"){ throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");}
     vector<condition> conditions;
-    if(args.size()==4){
-
+    if(args.size()==3){
+        auto start_time = std::chrono::high_resolution_clock::now();
+        API_delete(tablename,conditions);   
+        auto finish_time = std::chrono::high_resolution_clock::now();
+        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        if (tempTime == 0) tempTime = 10;
+        std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
     int i=4;
     while(1){
@@ -494,13 +498,13 @@ void Parser::Delete(vector<string> args){
         else if(args.at(i+1)=="and") i+=2;
         else break;
     }
-    /*debug
+   
     auto itr=conditions.begin();
     for(;itr!=conditions.end();itr++){
         cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
         cout<<itr->val.toStr();
         cout<<endl;
-    }*/
+    }
    
     //call API and timer
     auto start_time = std::chrono::high_resolution_clock::now();
