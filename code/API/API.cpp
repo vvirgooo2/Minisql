@@ -179,11 +179,11 @@ void API_insert(string tablename,vector<sqlvalue> value_list){
                     vector<Position> pos;
                     pos=im.GetPosition(table.tablename,indexcon);
                     if(!pos.empty()) throw std::runtime_error("Duplicate keys in "+table.attri_names[i]);
-                },
+                }
             }
             //noindex
             if(rm->selectRecord(table,table.attri_names,conditions,false)){
-                throw std::runtime_error("Duplicate keys in"+table.attri_names[i]);
+                throw std::runtime_error("Duplicate keys in "+table.attri_names[i]);
             }
 
         }
@@ -191,7 +191,7 @@ void API_insert(string tablename,vector<sqlvalue> value_list){
     Tuple t;
     t.element=value_list;
     //测试块
-    
+
     rm->insertRecord(table,t);
 }
 

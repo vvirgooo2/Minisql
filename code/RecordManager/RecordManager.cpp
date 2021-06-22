@@ -118,11 +118,12 @@ int  RecordManager::selectRecord(const Table &table, const vector<string> &attr,
         else if(itr->type==AType::Integer) length+=sizeof(int);
         else if(itr->type==AType::Float)   length+=sizeof(float);
     }
-    int rcdPerBlock = (4096-HEADER_SIZE)/length;
+    int rcdPerBlock = (4096-BLOCK_HEADER_SIZE)/length;
     int blockID=0;
+    int total=get_total_block_num(table.tablename);
     Block *B=bm.get_block(table.tablename,blockID);
     char* block=B->data_begin;
-    block=blockBuffer;
+
     //output attris
     if(output){
         cout<<" | ";
@@ -147,9 +148,9 @@ int  RecordManager::selectRecord(const Table &table, const vector<string> &attr,
             }
         }
         blockID++;
-        block=NULL;
-        //B=bm.get_block(table.tablename,blockID);  怎么判断这是文件里最后一块
-        //block=B->data_begin;
+        if(blockID>total) break;
+        B=bm.get_block(table.tablename,blockID);  
+        block=B->data_begin;
     }
     if(output) print(res);
     return res.row.size();
@@ -190,11 +191,11 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
 //插入记录
 bool RecordManager::insertRecord(const Table &table, const Tuple &record)
 {
-    int blockID=0;
+    int blockID=get_total_block_num(table.tablename);
     //怎么get到最后一块
     Block *B=bm.get_block(table.tablename,blockID);
     char* block=B->data_begin;
-    block=blockBuffer;
+
     Position pos;
     int length = 1;
     //计算每条记录的length
@@ -203,7 +204,7 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
         else if(itr->type==AType::Integer) length+=sizeof(int);
         else if(itr->type==AType::Float)   length+=sizeof(float);
     }
-    int rcdPerBlock= (4096-HEADER_SIZE)/length;  //一块最多多少个
+    int rcdPerBlock= (4096-BLOCK_HEADER_SIZE)/length;  //一块最多多少个
     int i=0;
     bool flag=false;
     for(;i<rcdPerBlock;i++){
@@ -219,8 +220,10 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
 
     if(!flag){
         //get到下一块，顺便把这张表的总块数+1
-        
-        
+        blockID++;
+        B=bm.get_block(table.tablename,blockID);
+        edit_total_block_num(table.tablename,blockID);
+        block=B->data_begin;
         pos.blockID=blockID;
         pos.offset=0;
     }
@@ -278,7 +281,7 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
         else if(itr->type==AType::Integer) length+=sizeof(int);
         else if(itr->type==AType::Float)   length+=sizeof(float);
     }
-    int rcdPerBlock= (4096-HEADER_SIZE)/length;  //一块最多多少个
+    int rcdPerBlock= (4096-BLOCK_HEADER_SIZE)/length;  //一块最多多少个
     int blockID=0;
     
     Block *B=bm.get_block(table.tablename,blockID);
@@ -339,7 +342,7 @@ bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr, 
         else if(itr->type==AType::Integer) length+=sizeof(int);
         else if(itr->type==AType::Float)   length+=sizeof(float);
     }
-    int rcdPerBlock = (4096-HEADER_SIZE)/length;
+    int rcdPerBlock = (4096-BLOCK_HEADER_SIZE)/length;
     int blockID=0;
     Block *B=bm.get_block(table.tablename,blockID);
     char* block=B->data_begin;
