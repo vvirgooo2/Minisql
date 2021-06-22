@@ -461,6 +461,7 @@ void Parser::Delete(vector<string> args){
         int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
         std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+        return;
     }
     int i=4;
     while(1){
