@@ -1,5 +1,5 @@
-#ifndef MINISQL_CATALOGMANAGER_H
-#define MINISQL_CATALOGMANAGER_H
+#ifndef _CATALOGMANAGER_H
+#define _CATALOGMANAGER_H
 #include "../SqlDataType.h"
 #include <string>
 #include <vector>

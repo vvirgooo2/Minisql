@@ -171,8 +171,8 @@ void CatalogManager::CreateTable(const std::string &TableName,
 
 
     // Make attribute
-    for (const auto &schema: schemaList) {
-        len += schema.second.getsize();
+    for (auto &schema: schemaList) {
+        //len += schema.second.getsize();
         table.attri_names.push_back(schema.first);
         auto t = schema.second;
         t.attri_name = schema.first;

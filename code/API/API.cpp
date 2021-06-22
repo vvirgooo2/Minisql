@@ -4,12 +4,14 @@
 #include"../RecordManager/RecordManager.h"
 #include"../IndexManager/IndexManager.h"
 #include"../BufferManager/BufferManager.h"
+#include"../CatalogManager/CatalogManager.h"
 #include<vector>
 #include<string>
 using namespace std;
 RecordManager *rm;
 BufferManage bm;
 IndexManager im;
+CatalogManager *cm;
 Table get_test_table(){
  //属性
     vector<attri_type> attris;
@@ -87,7 +89,7 @@ void API_select(string tablename, vector<condition> conditions){
 void API_selectpart(vector<string> attris, string tablename, vector<condition> conditions){
     Table table=get_test_table();
 
-
+    //检查属性是否存在
     bool attrExist=false;
     for(int i=0;i<attris.size();i++){
         for(int j=0;j<table.attri_names.size();j++){
@@ -99,9 +101,9 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
         if(!attrExist) throw std::runtime_error("Attributes is not existed.");
         attrExist=false;
     }
-    
+
     bool attrFetch=false;
-    //处理条件
+    //处理条件，int与float,主要是类型冲突
     for(int i=0;i<conditions.size();i++){
         for(int j=0;j<table.attri_names.size();j++){
             if(conditions[i].name==table.attri_names[j]){
@@ -110,14 +112,27 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
                         conditions[i].val.type.type=AType::Float;
                         conditions[i].val.f=(float)conditions[i].val.i;
                     }
+                else if(conditions[i].val.type.type!=table.attri_types[j].type) throw std::runtime_error("Type conflict!");
                 if(conditions[i].val.type.type==AType::String&&
                     conditions[i].val.str.size()>table.attri_types[j].char_sz) throw runtime_error("Require string is too long!");
+                
                 attrFetch=true;
                 break;
             }
         }
         if(!attrFetch) throw std::runtime_error("SYNTAX ERROR: Unknown attributes in conditions!");
         attrFetch=false;
+    }
+    //检查能否利用索引,查到的第一个
+    condition indexcon;
+    for(int i=0;i<conditions.size();i++){
+        for(int j=0;j<table.index.size();j++){
+            if(conditions[i].name==table.index[j].first){
+                indexcon=conditions[i];
+                rm->selectRecord_index(table,attris,conditions,indexcon,true);
+                break;
+            }
+        }
     }
     rm->selectRecord(table,attris,conditions,true);
 }
