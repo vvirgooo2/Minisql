@@ -77,8 +77,8 @@ void API_drop_index(string indexname){
 //传给record
 void API_select(string tablename, vector<condition> conditions){
     Table table=get_test_table();
-    rm->selectRecord(table,table.attri_names,conditions,true);
-
+    vector<string> attris=table.attri_names;
+    API_selectpart(attris,tablename,conditions);
 }
 
 //选择（部分）
@@ -86,6 +86,39 @@ void API_select(string tablename, vector<condition> conditions){
 //注意属性名参数只有name成员被赋值了
 void API_selectpart(vector<string> attris, string tablename, vector<condition> conditions){
     Table table=get_test_table();
+
+
+    bool attrExist=false;
+    for(int i=0;i<attris.size();i++){
+        for(int j=0;j<table.attri_names.size();j++){
+            if(attris[i]==table.attri_names[j]){
+                attrExist=true;
+                break;
+            }
+        }
+        if(!attrExist) throw std::runtime_error("Attributes is not existed.");
+        attrExist=false;
+    }
+    
+    bool attrFetch=false;
+    //处理条件
+    for(int i=0;i<conditions.size();i++){
+        for(int j=0;j<table.attri_names.size();j++){
+            if(conditions[i].name==table.attri_names[j]){
+                if(conditions[i].val.type.type==AType::Integer&&
+                    table.attri_types[j].type==AType::Float){
+                        conditions[i].val.type.type=AType::Float;
+                        conditions[i].val.f=(float)conditions[i].val.i;
+                    }
+                if(conditions[i].val.type.type==AType::String&&
+                    conditions[i].val.str.size()>table.attri_types[j].char_sz) throw runtime_error("Require string is too long!");
+                attrFetch=true;
+                break;
+            }
+        }
+        if(!attrFetch) throw std::runtime_error("SYNTAX ERROR: Unknown attributes in conditions!");
+        attrFetch=false;
+    }
     rm->selectRecord(table,attris,conditions,true);
 }
 

@@ -2,6 +2,7 @@
 #include"../IndexManager/IndexManager.h"
 #include"../BufferManager/BufferManager.h"
 #include<fstream>
+#include<iomanip>
 char blockBuffer[4096];
 extern BufferManage bm;
 extern IndexManager im;
@@ -11,7 +12,7 @@ void RecordManager::print(const Result &res) const{ //打印结果
     for(auto const &row:res.row){
         cout<<" | ";
         for(auto const &col:row.col){
-            cout<<col<<" | ";
+            cout<<setw(10)<<col<<" | ";
         }
         cout<<"\n";
     }
@@ -126,7 +127,7 @@ int  RecordManager::selectRecord(const Table &table, const vector<string> &attr,
     if(output){
         cout<<" | ";
         for(auto itr=attr.begin(); itr!= attr.end();itr++){
-            cout<<*itr<<" | ";
+            cout<<setw(10)<<*itr<<" | ";
         }
         cout<<endl;
     }
@@ -163,7 +164,7 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
     if(output){
         cout<<" | ";
         for(auto itr=attr.begin(); itr!= attr.end();itr++){
-            cout<<*itr<<" | ";
+            cout<<setw(10)<<*itr<<" | ";
         }
         cout<<endl;
     }
