@@ -1,5 +1,51 @@
-#include "BufferManager.h"
+#include <bits/stdc++.h>
+#include <string>
+#include "../SqlDataType.h"
 using namespace std;
+#define TABLE_HEADER_SIZE 4
+#define BLOCK_HEADER_SIZE 36
+#define NUM_TABLE 10000
+
+// 读内存块的时候，默认的是char(n)类型的要存n+1个字节
+class Block
+{
+/* 我们定义磁盘上前32+4 = 36个字节为块头，从第41个字节开始存储记录的信息
+ * 解析外存时就按照这个规则还原成员变量*/
+public:
+    char* data_begin;  // 有效记录的首地址 8 Byte
+    string TableName;  //32 Byte
+    int BlockId;  //4 Byte
+    Block();
+    Block(string tn, int bi);
+    bool is_empty();
+};
+
+
+class BufferManage
+{
+    
+private:
+    // 各个表的当前 最后一块的ID
+
+public:
+    Block *Buffer_pool;
+
+    BufferManage();
+    // 遍历bufferpool数组，根据表名和blockID搜索非满的块，有则返回块指针，没有则返回null 
+    Block* get_block(string TableName, int BlockId);  
+    
+    // 返回处理过的块
+    void ret_block(Block* blk);  
+
+};
+
+// 下面是磁盘操作函数
+Block* fetch_block_disk(string TableName, int BlockId);
+void write_block_disk(Block*blk);
+int get_total_block_num(string TableName);
+void edit_total_block_num(string TableName, int add);
+
+
 
 Block::Block()
 {
@@ -183,4 +229,47 @@ void edit_total_block_num(string TableName, int add)
     fout << i;
     f.close();
     return ;
+}
+
+int main()
+{
+    // create a buffer manager
+    BufferManage* mybuffer;
+    mybuffer = new BufferManage;
+	Block *myblk;
+    myblk = new Block;
+    int blk_num;
+    bool need_add = false;
+
+    /* 测试insert
+     * insert操作可以直接先查最后一个块的ID，
+     * 直接再调用get_block（表名，ID）即可
+     */
+    for (int i = 0; i < 10000; i++)
+    {
+        blk_num = get_total_block_num("table0");
+        myblk = mybuffer->get_block("table0", blk_num);
+        myblk->data_begin[1] = 'x';
+        edit_total_block_num("table0", need_add);
+        mybuffer->ret_block(myblk);
+        need_add = !need_add; // flip to test
+    }
+    
+    // 先填满buffer pool
+    for (int i = 0; i < MAX_BlockNumber; i++)
+    {
+        myblk = mybuffer->get_block("table0", i);
+        myblk->data_begin[10] = 'q';
+        mybuffer->ret_block(myblk);
+    }
+
+    // 测试bufferpool满的时候的替换
+    for (int i = 0; i < MAX_BlockNumber; i++)
+    {
+        myblk = mybuffer->get_block("table0", i);
+        myblk->data_begin[100] = 'y';
+        mybuffer->ret_block(myblk);
+    }
+
+    return 0;
 }
