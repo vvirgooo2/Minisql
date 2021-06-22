@@ -8,6 +8,7 @@ Block::Block()
     memset(data_begin, 0, (BLOCK_SIZE-BLOCK_HEADER_SIZE)*sizeof(char));
 }
 
+
 Block::Block(string tn, int bi)
 {
     TableName = tn;
@@ -15,10 +16,12 @@ Block::Block(string tn, int bi)
     data_begin = new char[BLOCK_SIZE];
 }
 
+
 bool Block::is_empty()
 {
     return BlockId == -1;
 }
+
 
 BufferManage::BufferManage()
 {
@@ -47,6 +50,7 @@ Block* BufferManage::get_block(string TableName, int BlockId)
     // not present in buffer
     return fetch_block_disk(TableName, BlockId);
 }
+
 
 void BufferManage::ret_block(Block* blk)
 {
@@ -85,17 +89,9 @@ void BufferManage::ret_block(Block* blk)
     write_block_disk(blk);
 }
 
-int get_num_table(string TableName)
-{
-    filebuf f;
-    f.open(TableName, ios::in | ios::out);
-    if(!f.is_open())
-    {
-        return 0;
-    }
-    istream fin(&f);
-}
 
+
+/*********************** DISK FUNC ************************/
 void write_block_disk(Block*blk)
 {
     string TableName = blk->TableName;
@@ -150,6 +146,7 @@ Block* fetch_block_disk(string TableName, int BlockId)
     return result;
 }
 
+
 int get_total_block_num(string TableName)
 {
     filebuf f;
@@ -170,6 +167,7 @@ int get_total_block_num(string TableName)
     f.close();
     return i;
 }
+
 
 void edit_total_block_num(string TableName, int add)
 {
