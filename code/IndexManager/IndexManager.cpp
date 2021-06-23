@@ -2,7 +2,7 @@
 //BNode
 template <typename T>
 BTNode<T>::BTNode(int n)
-:n(n), size(0), isleaf(true), min(T(NULL)), lastnode(NULL), nextnode(NULL), parent(NULL)
+:n(n), size(0), isleaf(false), min(T(NULL)), lastnode(NULL), nextnode(NULL), parent(NULL), id_in_parent(0)
 {
     keys = new T[n]();
     p = new Position[n]();
@@ -46,7 +46,7 @@ BTNode<T>* BTNode<T>::Split()
             this->p[i].clear();
             this->keys[i] = T(NULL);
         }
-        node->min = keys[0];
+        node->min = node->keys[0];
     }
     else {
         for (i = (this->size+1)/2; i < this->size;i++) {
@@ -111,17 +111,22 @@ BTNode<T>* BTNode<T>::Insert(BTNode<T>* node)
         if (node->min < this->child[i]->min)
             break;
     }
-    if (i == 0) {
-        node->lastnode = this->child[0]->lastnode;
-    }
-    if (i == this->size) {
-        node->nextnode = this->child[this->size - 1]->nextnode;
+    if (this->size == 0) {
+        this->child[0] = node;
+        this->size++;
+        this->min = node->min;
+        node->parent = this;
+        node->id_in_parent = 0;
+        return NULL;
     }
     for (j = this->size - 1; j >= i;j--){
         this->child[j+1] = this->child[j];
+        this->child[j]->id_in_parent = j + 1;
     }
     this->child[i] = node;
     this->size++;
+    node->id_in_parent = i;
+    node->parent = this;
     //update the keys of the child
     for (i = 0; i < this->size - 1;i++) {
         this->keys[i] = this->child[i + 1]->min;
@@ -129,9 +134,8 @@ BTNode<T>* BTNode<T>::Insert(BTNode<T>* node)
         this->child[i + 1]->lastnode = this->child[i];
     }
     //update other infos
-    if (this->size == 1 || node->min < this->min)
+    if (node->min < this->min)
         this->min = node->min;
-    node->parent = this;
     if (this->size > this->n) {
         return this->Split();
     }
@@ -150,11 +154,13 @@ BTNode<T>* BTNode<T>::GetBranch(T key)
     return child[i];
 }
 //this merge method assume that b is the bigger one, and the nodes in the 2 nodes are already sorted
+//the merge also update the data in the front,
 template <typename T>
 bool BTNode<T>::Merge(BTNode *b)
 {
     //return true for merging successfully
     //false for failure, but the elements has been banlanced
+    BTNode<T> *temp;
     if (this->size == 0 || b->size == 0)
         return true;//if one of the nodes is empty, then return, no need to merge
     if (this->size >= (this->n+1)/2 && b->size >= (b->n+1)/2)
@@ -176,6 +182,14 @@ bool BTNode<T>::Merge(BTNode *b)
                 this->size--;
                 b->size++;
                 b->min = b->keys[0];
+                temp = b;
+                while (!temp->isroot()) {
+                    if (temp->id_in_parent != 0) {
+                        temp->parent->keys[temp->id_in_parent - 1] = temp->min;
+                    }
+                    temp->parent->min = temp->parent->child[0]->min;
+                    temp = temp->parent;
+                }
             }
             //if this node is illgal
             else {
@@ -190,6 +204,14 @@ bool BTNode<T>::Merge(BTNode *b)
                 this->size++;
                 b->size--;
                 b->min = b->keys[0];
+                temp = b;
+                while (!temp->isroot()) {
+                    if (temp->id_in_parent != 0) {
+                        temp->parent->keys[temp->id_in_parent - 1] = temp->min;
+                    }
+                    temp->parent->min = temp->parent->child[0]->min;
+                    temp = temp->parent;
+                }
             }
             return false;
         }
@@ -205,6 +227,27 @@ bool BTNode<T>::Merge(BTNode *b)
                 b->nextnode->lastnode = this;
             }
             b->size = 0;
+            //update of the parent node
+            temp = b->parent;
+            for (i = b->id_in_parent; i < temp->size - 1;i++) {
+                temp->child[i] = temp->child[i + 1];
+                temp->child[i]->id_in_parent = i;
+            }
+            temp->child[temp->size - 1] = NULL;
+            if (temp->size > 1)
+                temp->keys[temp->size - 2] = T(NULL);
+            temp->size--;
+            for (i = 0; i < temp->size - 1;i++) {
+                temp->keys[i] = temp->child[i + 1]->min;
+            }
+            temp->min = temp->child[0]->min;
+            while (!temp->isroot()) {
+                if (temp->id_in_parent != 0) {
+                    temp->parent->keys[temp->id_in_parent - 1] = temp->min;
+                }
+                temp->parent->min = temp->parent->child[0]->min;
+                temp = temp->parent;
+            }
             return true;
         }
     }
@@ -219,21 +262,36 @@ bool BTNode<T>::Merge(BTNode *b)
                 }
                 b->child[0] = this->child[this->size - 1];
                 b->child[0]->parent = b;
+                b->child[0]->id_in_parent = 0;
                 b->min = b->child[0]->min;
                 this->child[this->size - 1] = NULL;
-                this->keys[this->size - 2] = T(NULL);
+                if (this->size > 1)
+                    this->keys[this->size - 2] = T(NULL);
                 this->size--;
                 b->size++;
                 for (i = 0; i < b->size - 1;i++) {
                     b->keys[i] = b->child[i + 1]->min;
+                    b->child[i]->id_in_parent = i;
+                }
+                b->child[i]->id_in_parent = i;
+                temp = b;
+                while (!temp->isroot()) {
+                    if (temp->id_in_parent != 0) {
+                        temp->parent->keys[temp->id_in_parent - 1] = temp->min;
+                    }
+                    temp->parent->min = temp->parent->child[0]->min;
+                    temp = temp->parent;
                 }
             }
             //if this node is the illegal one
             else {
                 this->child[this->size] = b->child[0];
                 this->keys[this->size - 1] = this->child[this->size]->min;
+                this->child[this->size]->parent = this;
+                this->child[this->size]->id_in_parent = this->size;
                 for (i = 0; i < b->size - 1;i++) {
                     b->child[i] = b->child[i + 1];
+                    b->child[i]->id_in_parent = i;
                 }
                 b->min = b->child[0]->min;
                 b->child[b->size - 1] = NULL;
@@ -243,6 +301,16 @@ bool BTNode<T>::Merge(BTNode *b)
                 b->size--;
                 for (i = 0; i < b->size - 1;i++) {
                     b->keys[i] = b->child[i + 1]->min;
+                    b->child[i]->id_in_parent = i;
+                }
+                b->child[i]->id_in_parent = i;
+                temp = b;
+                while (!temp->isroot()) {
+                    if (temp->id_in_parent != 0) {
+                        temp->parent->keys[temp->id_in_parent - 1] = temp->min;
+                    }
+                    temp->parent->min = temp->parent->child[0]->min;
+                    temp = temp->parent;
                 }
             }
             return false;
@@ -251,6 +319,7 @@ bool BTNode<T>::Merge(BTNode *b)
         else {
             for (i = this->size, j = 0; j < b->size;i++, j++) {
                 this->child[i] = b->child[j];
+                this->child[i]->id_in_parent = i;
             }
             this->size += b->size;
             b->size = 0;
@@ -260,9 +329,34 @@ bool BTNode<T>::Merge(BTNode *b)
             }
             for (i = 0; i < this->size - 1;i++) {
                 this->keys[i] = this->child[i + 1]->min;
+                this->child[i]->id_in_parent = i;
             }
+            this->child[i]->id_in_parent = i;
+            //update of of the parent node
+            temp = b->parent;
+            for (i = b->parent->id_in_parent; i < temp->size - 1;i++) {
+                temp->child[i] = temp->child[i + 1];
+            }
+            temp->child[temp->size - 1] = NULL;
+            if (temp->size > 1)
+                temp->keys[temp->size - 2] = T(NULL);
+            temp->size--;
+            //updates of keys
+            for (i = 0; i < temp->size - 1;i++) {
+                temp->keys[i] = temp->child[i + 1]->min;
+                temp->child[i]->id_in_parent = i;
+            }
+            temp->child[i]->id_in_parent = i;
+            temp->min = temp->child[0]->min;
+            while (!temp->isroot()) {
+                if (temp->id_in_parent != 0) {
+                    temp->parent->keys[temp->id_in_parent - 1] = temp->min;
+                }
+                temp->parent->min = temp->parent->child[0]->min;
+                temp = temp->parent;
+            }
+            return true;
         }
-        return true;
     }
 }
 //Implentation of BTree class
@@ -296,18 +390,25 @@ BTree<T>::~BTree()
 template <typename T>
 bool BTree<T>::Insert(const T key, const Position & p)
 {
-    BTNode<T>* temp;
+    BTNode<T>* temp, *temp_split;
     BTNode<T>* new_root;
-    //find the right position
-    temp = root->Insert(key, p);
-    //if root is the leaf
-    if (temp == NULL)
-        return true;
-    while (!temp->isleaf) {
-        temp = temp->Insert(key, p);
+    //find the right position,
+    temp = this->Find(key);
+    temp_split = temp->Insert(key, p);
+    //if root is the leaf, and no split
+    while (!temp->isroot()) {
+        if (temp->id_in_parent != 0) {
+            temp->parent->keys[temp->id_in_parent - 1] = temp->min;
+        }
+        if (key < temp->parent->min) {
+            temp->parent->min = key;
+        }
+        temp = temp->parent;
     }
-    //insert into the leaf nodes, temp is the new node if splitted
-    temp = temp->Insert(key, p);
+    if (temp_split == NULL)
+        return true;
+    temp = temp_split;
+    //now temp points to the NULL, which means no split, or not NULL, which means split occurs, for latter, we insert the new node to it's parent
     //insert the new node into its parent
     while (temp != NULL) {
         //if temp is splitted by the root, then create a new root
@@ -325,7 +426,7 @@ bool BTree<T>::Insert(const T key, const Position & p)
 template <typename T>
 void BTree<T>::build(IndexInfo<T> &indexinfo)
 {
-    first = root = new BTNode<T>(n);
+    //first = root = new BTNode<T>(n);
     int i;
     for (i = 0; i < indexinfo.size;i++) {
         Insert(indexinfo.keys[i], indexinfo.p[i]);
@@ -346,17 +447,37 @@ template <typename T>
 bool BTree<T>::DeleteKey(T key)
 {
     int i;
-    BTNode<T> *temp, *parent;
+    BTNode<T> *temp, *parent, *latch;
     temp = this->Find(key);
+    //find the right place of key
     for (i = 0; i < temp->size;i++) {
         if (key == temp->keys[i])
             break;
     }
+    //if can't find the key, then throw error
+    if (i == temp->size) {
+        throw runtime_error("The key to be deleted can't be found in the index Tree");
+    }
+    //move the key in the leaf
     for (; i < temp->size - 1;i++) {
         temp->keys[i] = temp->keys[i + 1];
         temp->p[i] = temp->p[i + 1];
     }
+    temp->keys[i] = T(NULL);
+    temp->p[i].clear();
     temp->size--;
+    temp->min = temp->keys[0];
+    //update the min of the parent
+    latch = temp;
+    while (!temp->isroot()) {
+        if (temp->id_in_parent != 0) {
+            temp->parent->keys[temp->id_in_parent - 1] = temp->min;
+        }
+        temp->parent->min = temp->parent->child[0]->min;
+        temp = temp->parent;
+    }
+    temp = latch;
+
     while (!temp->islegal()) {
         if (temp->isroot()) {
             root = temp->child[0];
@@ -370,37 +491,27 @@ bool BTree<T>::DeleteKey(T key)
             //if can merge, then temp is deleted
             if (temp->lastnode->Merge(temp)) {
                 parent = temp->parent;
-                for (i = 0; i < parent->size;i++) {
-                    if (parent->child[i] == temp)
-                        break;
-                }
-                for (; i < parent->size - 1;i++) {
-                    parent->child[i] = parent->child[i + 1];
-                }
-                parent->size--;
-                for (i = 0; i < parent->size;i++) {
-                    parent->keys[i] = parent->child[i + 1]->min;
-                }
                 delete temp;
                 temp = parent;
             }
-            //if can't, then the 2 nodes has already been balanced, temp should be lagal
+            //if can't, then the 2 nodes has already been balanced, we should update the min of its parent
+            else {
+                latch = temp;
+                //update the min of the parent
+                while (!temp->isroot()) {
+                    if (temp->id_in_parent != 0) {
+                        temp->parent->keys[temp->id_in_parent - 1] = temp->min;
+                    }
+                    temp->parent->min = temp->parent->child[0]->min;
+                    temp = temp->parent;
+                }
+                temp = latch;
+            }
         }
         else if (temp->nextnode != NULL) {
             //don't care about the warning, temp should be initialized by find
             if (temp->Merge(temp->nextnode)) {
                 parent = temp->nextnode->parent;
-                for (i = 0; i < parent->size;i++) {
-                    if (parent->child[i] == temp->nextnode)
-                        break;
-                }
-                for (; i < parent->size - 1;i++) {
-                    parent->child[i] = parent->child[i + 1];
-                }
-                parent->size--;
-                for (i = 0; i < parent->size;i++) {
-                    parent->keys[i] = parent->child[i + 1]->min;
-                }
                 delete temp->nextnode;
                 temp = parent;
             }
@@ -409,7 +520,6 @@ bool BTree<T>::DeleteKey(T key)
         else {
             throw runtime_error("The B+ Tree root is not valid");
         }
-        temp = parent;
     }
     return true;
 }
@@ -501,7 +611,7 @@ vector<Position> BTree<T>::GetPosition(T val, int op)
     }
     return pv;
 }
-//
+//the interface
 TableIndex::TableIndex()
 :tablename(""), n(0), i_n(0), f_n(0), s_n(0)
 {
@@ -526,6 +636,8 @@ bool TableIndex::CreateIndex(IndexInfo<int> &indexinfo)
         return false;
     BTree<int> *BT = new BTree<int>(indexinfo);
     int_index.push_back(*BT);
+    i_n++;
+    n++;
     return true;
 }
 bool TableIndex::CreateIndex(IndexInfo<float> &indexinfo)
@@ -534,6 +646,8 @@ bool TableIndex::CreateIndex(IndexInfo<float> &indexinfo)
         return false;
     BTree<float> *BT = new BTree<float>(indexinfo);
     float_index.push_back(*BT);
+    f_n++;
+    n++;
     return true;
 }
 bool TableIndex::CreateIndex(IndexInfo<string> &indexinfo)
@@ -542,6 +656,8 @@ bool TableIndex::CreateIndex(IndexInfo<string> &indexinfo)
         return false;
     BTree<string> *BT = new BTree<string>(indexinfo);
     str_index.push_back(*BT);
+    s_n++;
+    n++;
     return true;
 }
 bool TableIndex::DeleteIndex(const string& attr_name)
@@ -552,18 +668,24 @@ bool TableIndex::DeleteIndex(const string& attr_name)
     for (it_i = int_index.begin(); it_i != int_index.end();++it_i) {
         if (it_i->attr_name == attr_name) {
             int_index.erase(it_i);
+            i_n--;
+            n--;
             return true;
         }
     }
     for (it_f = float_index.begin(); it_f != float_index.end();++it_f) {
         if (it_f->attr_name == attr_name) {
             float_index.erase(it_f);
+            f_n--;
+            n--;
             return true;
         }
     }
     for (it_s = str_index.begin(); it_s != str_index.end();++it_s) {
         if (it_s->attr_name == attr_name) {
             str_index.erase(it_s);
+            s_n--;
+            n--;
             return true;
         }
     }
@@ -571,85 +693,95 @@ bool TableIndex::DeleteIndex(const string& attr_name)
     return false;//
 }
 //given the index_name and the corresponding value, when insert
-bool TableIndex::InsertKey(vector<string> index_name, vector<sqlvalue> v, const Position& p)
+bool TableIndex::InsertKey(vector<sqlvalue> index_value, const Position& p)
 {
-    std::vector<string>::iterator it_index_name;
     std::vector<sqlvalue>::iterator it_v;
     std::vector<BTree<int>>::iterator it_i;
     std::vector<BTree<float>>::iterator it_f;
     std::vector<BTree<string>>::iterator it_s;
-    for (it_index_name = index_name.begin(), it_v = v.begin(); it_index_name != index_name.end() && it_v != v.end();it_index_name++, it_v++) {
+    bool is_find;
+    for (it_v = index_value.begin(); it_v != index_value.end();it_v++) {
+        is_find = false;
         switch (it_v->type.type) {
             case AType::Integer:{
                 for (it_i = int_index.begin(); it_i != int_index.end();it_i++) {
-                    if (it_i->attr_name == *it_index_name) {
+                    if (it_i->attr_name == it_v->type.attri_name) {
                         it_i->Insert(it_v->i, p);
-                        continue;
+                        break;
+                        is_find = true;
                     }
                 }
                 break;
             }
             case AType::Float: {
                 for (it_f = float_index.begin(); it_f != float_index.end();it_f++) {
-                    if (it_f->attr_name == *it_index_name) {
+                    if (it_f->attr_name == it_v->type.attri_name) {
                         it_f->Insert(it_v->f, p);
-                        continue;
+                        is_find = true;
+                        break;
                     }
                 }
                 break;
             }
             case AType::String: {
                 for (it_s = str_index.begin(); it_s != str_index.end();it_s++) {
-                    if (it_s->attr_name == *it_index_name) {
+                    if (it_s->attr_name == it_v->type.attri_name) {
                         it_s->Insert(it_v->str, p);
-                        continue;
+                        is_find = true;
+                        break;
                     }
                 }
                 break;
             }
         }
-        throw runtime_error("[Error] Can't find the index " + *it_index_name + " to be updated for table " + tablename);
+        if (!is_find)
+            throw runtime_error("[Error] Can't find the index " + it_v->type.attri_name + " to be updated for table " + tablename);
     }
     return true;
 }
-bool TableIndex::DeleteKey(vector<string> index_name, vector<sqlvalue> v)
+bool TableIndex::DeleteKey(vector<sqlvalue> index_value)
 {
-    std::vector<string>::iterator it_index_name;
     std::vector<sqlvalue>::iterator it_v;
     std::vector<BTree<int>>::iterator it_i;
     std::vector<BTree<float>>::iterator it_f;
     std::vector<BTree<string>>::iterator it_s;
-    for (it_index_name = index_name.begin(), it_v = v.begin(); it_index_name != index_name.end() && it_v != v.end();it_index_name++, it_v++) {
+    bool is_find;
+    for (it_v = index_value.begin();it_v != index_value.end();it_v++) {
+        is_find = false;
         switch (it_v->type.type) {
             case AType::Integer:{
                 for (it_i = int_index.begin(); it_i != int_index.end();it_i++) {
-                    if (it_i->attr_name == *it_index_name) {
+                    if (it_i->attr_name == it_v->type.attri_name) {
                         it_i->DeleteKey(it_v->i);
-                        continue;
+                        is_find = true;
+                        break;
                     }
                 }
                 break;
             }
             case AType::Float: {
                 for (it_f = float_index.begin(); it_f != float_index.end();it_f++) {
-                    if (it_f->attr_name == *it_index_name) {
+                    if (it_f->attr_name == it_v->type.attri_name) {
                         it_f->DeleteKey(it_v->f);
-                        continue;
+                        is_find = true;
+                        break;
                     }
                 }
                 break;
             }
             case AType::String: {
                 for (it_s = str_index.begin(); it_s != str_index.end();it_s++) {
-                    if (it_s->attr_name == *it_index_name) {
+                    if (it_s->attr_name == it_v->type.attri_name) {
                         it_s->DeleteKey(it_v->str);
-                        continue;
+                        is_find = true;
+                        break;
                     }
                 }
                 break;
             }
         }
-        throw runtime_error("[Error] Can't find the index " + *it_index_name + " to be updated for table " + tablename);
+        if (!is_find)
+            throw runtime_error("[Error] Can't find the index " + it_v->type.attri_name + " to be updated for table " + tablename);
     }
     return true;
 }
@@ -687,15 +819,15 @@ IndexManager::~IndexManager()
     TI.resize(0);
 }
 
-TableIndex& IndexManager::FindTable(const string &tablename)
+TableIndex* IndexManager::FindTable(const string &tablename)
 {
     std::vector<TableIndex>::iterator it_table;
     for (it_table = TI.begin(); it_table != TI.end();it_table++) {
         if (it_table->tablename == tablename) {
-            return *it_table;
+            return &(*it_table);
         }
     }
-    throw runtime_error("Can't find table " + tablename + " in index manager");
+    return NULL;
 }
 void IndexManager::Error()
 {
@@ -703,31 +835,102 @@ void IndexManager::Error()
 }
 bool IndexManager::CreateIndex(const string &tablename, IndexInfo<int> &indexinfo)
 {
-    return this->FindTable(tablename).CreateIndex(indexinfo);
+    TableIndex *temp;
+    temp = this->FindTable(tablename);
+    if (temp != NULL) {
+        return temp->CreateIndex(indexinfo);
+    }
+    else {
+        temp = new TableIndex(tablename);
+        cout << "new table is created" << endl;
+        bool is_succe = temp->CreateIndex(indexinfo);
+        TI.push_back(*temp);
+        if (is_succe)
+            n++;
+        return is_succe;
+    }
 }
 bool IndexManager::CreateIndex(const string &tablename, IndexInfo<float> &indexinfo)
 {
-    return this->FindTable(tablename).CreateIndex(indexinfo);
+    TableIndex *temp;
+    temp = this->FindTable(tablename);
+    if (temp != NULL) {
+        return temp->CreateIndex(indexinfo);
+    }
+    else {
+        temp = new TableIndex(tablename);
+        cout << "new table is created" << endl;
+        bool is_succe = temp->CreateIndex(indexinfo);
+        TI.push_back(*temp);
+        if (is_succe)
+            n++;
+        return is_succe;
+    }
 }
 bool IndexManager::CreateIndex(const string &tablename, IndexInfo<string> &indexinfo)
 {
-    return this->FindTable(tablename).CreateIndex(indexinfo);
+    TableIndex *temp;
+    temp = this->FindTable(tablename);
+    if (temp != NULL) {
+        return temp->CreateIndex(indexinfo);
+    }
+    else {
+        temp = new TableIndex(tablename);
+        cout << "new table is created" << endl;
+        bool is_succe = temp->CreateIndex(indexinfo);
+        TI.push_back(*temp);
+        if (is_succe)
+            n++;
+        return is_succe;
+    }
 }
 bool IndexManager::DeleteIndex(const string &tablename, const string &index_name)
 {
-    return this->FindTable(tablename).DeleteIndex(index_name);
+    TableIndex *temp;
+    temp = this->FindTable(tablename);
+    if (temp != NULL) {
+        if (temp->DeleteIndex(index_name)){
+            n--;
+            return true;
+        }
+        return false;
+    }
+    else {
+        throw runtime_error("Can't find table " + tablename + " in index manager");
+    }
 }
-bool IndexManager::InsertKey(const string &tablename, vector<string> index_name, vector<sqlvalue> v, const Position& p)
+bool IndexManager::InsertKey(const string &tablename, vector<sqlvalue> index_value, const Position& p)
 {
-    return this->FindTable(tablename).InsertKey(index_name, v, p);
+    TableIndex *temp;
+    temp = this->FindTable(tablename);
+    if (temp != NULL) {
+        return temp->InsertKey(index_value, p);
+    }
+    else {
+        throw runtime_error("Can't find table " + tablename + " in index manager");
+    }
 }
-bool IndexManager::DeleteKey(const string &tablename, vector<string> index_name, vector<sqlvalue> v)
+bool IndexManager::DeleteKey(const string &tablename, vector<sqlvalue> index_value)
 {
-    return this->FindTable(tablename).DeleteKey(index_name, v);
+    TableIndex *temp;
+    temp = this->FindTable(tablename);
+    if (temp != NULL) {
+        return temp->DeleteKey(index_value);
+    }
+    else {
+        throw runtime_error("Can't find table " + tablename + " in index manager");
+    }
 }
 vector<Position> IndexManager::GetPosition(const string &tablename, const condition &c)
 {
-    return this->FindTable(tablename).GetPosition(c);
+    TableIndex *temp;
+    temp = this->FindTable(tablename);
+    if (temp != NULL) {
+        return temp->GetPosition(c);
+    }
+    else {
+        throw runtime_error("Can't find table " + tablename + " in index manager");
+    }
 }
 bool IndexManager::Save()
 {
@@ -736,6 +939,45 @@ bool IndexManager::Save()
 bool IndexManager::Read()
 {
     return true;
+}
+int main(void)
+{
+    IndexInfo<int> indexinfo("my test table", 2000, "grade", AType::Integer, 4);
+    int i;
+    int a[2000];
+    for (i = 2000-1; i >=0;i--) {
+        a[i] = rand();
+        indexinfo.AddKey(a[i], i * 4 / 4096, i * 4 % 4096);
+    }
+    IndexManager IM;
+    IM.CreateIndex(indexinfo.tablename, indexinfo);
+    //test for deleting
+    sqlvalue v;
+    v.type.type = AType::Integer;
+    v.type.attri_name = "grade";
+    vector<string> index_name;
+    index_name.push_back("grade");
+    vector<sqlvalue> vv;
+    for (i = 2000-1; i >=1001;i--) {
+        v.i = a[i];
+        vv.push_back(v);
+        IM.DeleteKey("my test table", vv);
+        vv.pop_back();
+    }
+    IM.DeleteKey("my test table", vv);
+    cout << "hello" << endl;
+    //test for select
+    condition c;
+    c.name = "grade";
+    c.op = 3; //>=1000
+    c.val.i = 1000;
+    c.val.type.type = AType::Integer;
+    vector<Position> p;
+    p = IM.GetPosition("my test table", c);
+    cout << "hello" << endl;
+    IM.DeleteIndex("my test table", "grade");
+    cout << "hello" << endl;
+    return 0;
 }
 
 

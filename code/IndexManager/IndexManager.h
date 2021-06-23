@@ -21,6 +21,7 @@ class BTNode
         Position *p; //n-1 position for n-1 keys
         BTNode<T> **child;//n child node
         BTNode<T> *lastnode, *nextnode, *parent;
+        int id_in_parent;
         BTNode(int n);
         ~BTNode();
         BTNode<T>* Insert(T key, const Position &p);
@@ -66,8 +67,8 @@ class TableIndex
         bool CreateIndex(IndexInfo<float> &indexinfo);
         bool CreateIndex(IndexInfo<string> &indexinfo);
         bool DeleteIndex(const string& attr_name);
-        bool InsertKey(vector<string> index_name, vector<sqlvalue> v, const Position& p);//update when insert or delete a tuple, vector is the attributes of the tuples
-        bool DeleteKey(vector<string> index_name, vector<sqlvalue> v);
+        bool InsertKey(vector<sqlvalue> index_value, const Position& p);//update when insert or delete a tuple, vector is the attributes of the tuples
+        bool DeleteKey(vector<sqlvalue> index_value);
         vector<Position> GetPosition(const condition& c);//return a vector of positions of the points that satisfy the consition
 };
 //this class is the interface of the API, the highest level to control B+Tree
@@ -82,16 +83,18 @@ class IndexManager
         bool CreateIndex(const string &tablename, IndexInfo<float> &indexinfo);
         bool CreateIndex(const string &tablename, IndexInfo<string> &indexinfo);
         bool DeleteIndex(const string &tablename, const string &index_name);
-        //note that index_name, v, p should all be indices, selected according to catalog manager
-        bool InsertKey(const string &tablename, vector<string> index_name, vector<sqlvalue> v, const Position& p);
-        //note that index_name, v should all be indices, selected according to catalog manager
-        bool DeleteKey(const string &tablename, vector<string> index_name, vector<sqlvalue> v);
+        //note that index_value, p should all be indices, selected according to catalog manager, otherwise error occurs
+        //index_value and the corresponding p could contain any index in this table of any amount
+        bool InsertKey(const string &tablename, vector<sqlvalue> index_value, const Position& p);
+        //note that index_value, should all be indices, selected according to catalog manager
+        //index_value could contain any index in this table of any amount
+        bool DeleteKey(const string &tablename, vector<sqlvalue> index_value);
         vector<Position> GetPosition(const string &tablename, const condition &c);
         bool Save();
         bool Read();
 
     private:
-        TableIndex &FindTable(const string &tablename);
+        TableIndex *FindTable(const string &tablename);
         void Error();
 };
 #endif
