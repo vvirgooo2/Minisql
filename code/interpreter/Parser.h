@@ -8,6 +8,7 @@ public:
     Parser(){}
     bool input(string ins);            //有输入就往里扔，能运行就会执行
     void flushBuffer();
+    bool outtime=true;
 private:
     deque<string> buffer;              //用于暂时存储分号前的string
     void decode(vector<string> args);
