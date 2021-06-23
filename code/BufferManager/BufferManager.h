@@ -25,28 +25,28 @@ public:
 
 class BufferManage
 {
+    
+private:
+    // 各个表的当前 最后一块的ID
+
 public:
     Block *Buffer_pool;
 
     BufferManage();
-
-    /* 遍历bufferpool数组，根据表名和blockID搜索并返回块指针
-     * 返回的blockID如果为-1的话，说明这个块原本是不存在的
-     * 接下来的操作就看调用程序要干什么了，比如选择操作的话，那么就不需要执行ret_block了
-     */
+    // 遍历bufferpool数组，根据表名和blockID搜索非满的块，有则返回块指针，没有则返回null 
     Block* get_block(string TableName, int BlockId);  
-        
-    /* 返回处理过的块 */
+    
+    // 返回处理过的块
     void ret_block(Block* blk);  
 
 };
-
 
 // 下面是磁盘操作函数
 Block* fetch_block_disk(string TableName, int BlockId);
 void write_block_disk(Block*blk);
 int get_total_block_num(string TableName);
 void edit_total_block_num(string TableName, int add);
+
 
 #endif
 
