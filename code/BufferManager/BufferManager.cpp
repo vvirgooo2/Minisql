@@ -93,20 +93,22 @@ void write_block_disk(Block*blk)
     char* data = blk->data_begin;
 
     filebuf f;
-    f.open(TableName, ios::in | ios::out);
+    f.open(TableName, ios::in | ios::out | ios::binary);
     if(!f.is_open())
     {
         ofstream new_f(TableName);
         new_f.close();
-        f.open(TableName, ios::in | ios::out);
+        f.open(TableName, ios::in | ios::out | ios::binary);
     }
     istream fin(&f);
     ostream fout(&f);
     fout.seekp(TABLE_HEADER_SIZE + BlockId*BLOCK_SIZE);
     fout << TableName << BlockId;
+    fout.seekp(TABLE_HEADER_SIZE + BlockId*BLOCK_SIZE+BLOCK_HEADER_SIZE,ios::beg);
     for (int i = 0; i < BLOCK_SIZE-BLOCK_HEADER_SIZE; i++)
     {
         fout << data[i];
+        if(data[i]=='\n') cout<<"eeeerrrrrooooooorrrrrroo";
     }
     return ;    
 }
@@ -118,7 +120,7 @@ Block* fetch_block_disk(string TableName, int BlockId)
     filebuf f;
     Block* result;
 
-    f.open(TableName, ios::in | ios::out);
+    f.open(TableName, ios::in | ios::out | ios::binary);
     // there is no such block
     if(!f.is_open())
     {
@@ -143,7 +145,7 @@ Block* fetch_block_disk(string TableName, int BlockId)
 int get_total_block_num(string TableName)
 {
     filebuf f;
-    f.open(TableName, ios::in | ios::out);
+    f.open(TableName, ios::in | ios::out | ios::binary);
     // 新开文件即初始化为0
     if(!f.is_open())
     {
@@ -165,7 +167,7 @@ void edit_total_block_num(string TableName, int add)
 {
     filebuf f;
     int i;
-    f.open(TableName, ios::in | ios::out);
+    f.open(TableName, ios::in | ios::out | ios::binary);
     istream fin(&f);
     fin >> i;
     i += add;

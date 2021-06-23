@@ -3,7 +3,6 @@
 #include"../BufferManager/BufferManager.h"
 #include<fstream>
 #include<iomanip>
-char blockBuffer[4096];
 extern BufferManage bm;
 extern IndexManager im;
 //打印结果
@@ -140,7 +139,7 @@ int  RecordManager::selectRecord(const Table &table, const vector<string> &attr,
     //搜索所有条目
     while(block){
         for(int i=0;i<rcdPerBlock;i++){
-            if(block[i*length]!=1) continue;
+            if(block[i*length]==0) continue;
             readTuple(block,i*length,table.attri_types,t);
             if(validCheck(conditions,t)){
                 r=t.fetchRow(table.attri_names,attr);
@@ -286,7 +285,6 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
     
     Block *B=bm.get_block(table.tablename,blockID);
     char *block=B->data_begin;
-    block=blockBuffer;
     
     Tuple t;
     
