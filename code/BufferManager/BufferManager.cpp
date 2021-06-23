@@ -112,11 +112,11 @@ void write_block_disk(Block*blk)
     fout.seekp(TABLE_HEADER_SIZE + BlockId*BLOCK_SIZE);
     fout << TableName << BlockId;
     fout.seekp(TABLE_HEADER_SIZE + BlockId*BLOCK_SIZE+BLOCK_HEADER_SIZE,ios::beg);
-    for (int i = 0; i < BLOCK_SIZE-BLOCK_HEADER_SIZE; i++)
+    /*for (int i = 0; i < BLOCK_SIZE-BLOCK_HEADER_SIZE; i++)
     {
         fout << data[i];
-        if(data[i]=='\n') cout<<"eeeerrrrrooooooorrrrrroo";
-    }
+    }*/
+    fout.write(data,BLOCK_SIZE-BLOCK_HEADER_SIZE);
     return ;    
 }
 
@@ -141,10 +141,11 @@ Block* fetch_block_disk(string TableName, int BlockId)
     result = new Block(TableName, BlockId);
 
     fin.seekg(TABLE_HEADER_SIZE + BlockId * BLOCK_SIZE + BLOCK_HEADER_SIZE, ios::beg);
-    for (int i = 0; i < BLOCK_SIZE-BLOCK_HEADER_SIZE; i++)
+   /* for (int i = 0; i < BLOCK_SIZE-BLOCK_HEADER_SIZE; i++)
     {
         fin >> (result->data_begin)[i];
-    }
+    }*/
+    fin.read(result->data_begin,BLOCK_SIZE-BLOCK_HEADER_SIZE);
     return result;
 }
 

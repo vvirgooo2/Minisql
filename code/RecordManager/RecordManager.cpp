@@ -15,7 +15,6 @@ void RecordManager::print(const Result &res) const{ //打印结果
         }
         cout<<"\n";
     }
-    cout<<res.row.size()<<" selected."<<endl;
 }  
 
 //检查元组是否符合条件
@@ -109,7 +108,7 @@ bool RecordManager::dropTable(const string tablename)
 //查找记录,返回条数,无须辅助
 //可能每个块头的偏移要计算一下
 int  RecordManager::selectRecord(const Table &table, const vector<string> &attr, const vector<condition> conditions,bool output)
-{   
+{   try{
     int length = 1;
     //计算每条记录的length
     for(auto itr= table.attri_types.begin(); itr!= table.attri_types.end();itr++){
@@ -133,26 +132,35 @@ int  RecordManager::selectRecord(const Table &table, const vector<string> &attr,
     }
 
     Tuple t;
-    Result res;
+    int rownum = 0;
     Row r;
     
+        
+        
     //搜索所有条目
     while(block){
+        Result res;
         for(int i=0;i<rcdPerBlock;i++){
-            if(block[i*length]==0) continue;
+            if(block[i*length]!=1) continue;
             readTuple(block,i*length,table.attri_types,t);
             if(validCheck(conditions,t)){
                 r=t.fetchRow(table.attri_names,attr);
                 res.row.push_back(r);
             }
         }
+        if(output) print(res);
+        rownum+=res.row.size();
         blockID++;
         if(blockID>total) break;
         B=bm.get_block(table.tablename,blockID);  
         block=B->data_begin;
     }
-    if(output) print(res);
-    return res.row.size();
+    if(output) cout<<rownum<<" selected."<<endl;
+    return rownum;
+    }
+    catch(std::runtime_error &error){
+        cout << "[Error] " << error.what() << endl;
+    }
 }
 
 //查找记录，返回条数，有索引,可以传进来一个有索引的条件
@@ -221,7 +229,7 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
         //get到下一块，顺便把这张表的总块数+1
         blockID++;
         B=bm.get_block(table.tablename,blockID);
-        edit_total_block_num(table.tablename,blockID);
+        edit_total_block_num(table.tablename,1);
         block=B->data_begin;
         pos.blockID=blockID;
         pos.offset=0;
@@ -282,7 +290,7 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
     }
     int rcdPerBlock= (4096-BLOCK_HEADER_SIZE)/length;  //一块最多多少个
     int blockID=0;
-    
+    int total=get_total_block_num(table.tablename);
     Block *B=bm.get_block(table.tablename,blockID);
     char *block=B->data_begin;
     
@@ -312,13 +320,12 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
                 }
             }
         }
-        blockID++;
-        
         bm.ret_block(B);
+        blockID++;
+        if(blockID>total) break;
         //怎么判断是最后一块
         B=bm.get_block(table.tablename,blockID);
         block=B->data_begin;
-        block=NULL;
     }
     return true;
 }
@@ -354,7 +361,7 @@ bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr, 
     //搜索所有条目
     while(block){
         for(int i=0;i<rcdPerBlock;i++){
-            if(block[i*length]!=1) continue;
+            if(block[i*length]==1) continue;
             readTuple(block,i*length,table.attri_types,t);
             pos.clear();
             pos.blockID=blockID;

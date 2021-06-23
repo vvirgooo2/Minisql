@@ -148,7 +148,7 @@ void Parser::Create_table(vector<string> args){
     auto start_time = std::chrono::high_resolution_clock::now();
     API_create_table(tablename,attris);
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
     std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
@@ -166,7 +166,7 @@ void Parser::Drop_table(vector<string> args){
         auto start_time = std::chrono::high_resolution_clock::now();
         API_drop_table(tablename);
         auto finish_time = std::chrono::high_resolution_clock::now();
-        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
         std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
@@ -194,7 +194,7 @@ void Parser::Create_index(vector<string> args){
                 auto start_time = std::chrono::high_resolution_clock::now();
                 API_create_index(tablename,indexname,at_name);
                 auto finish_time = std::chrono::high_resolution_clock::now();
-                int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+                long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
                 if (tempTime == 0) tempTime = 10;
                 std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
                 cout<<"table: "<<tablename<<" index: "<<indexname<<" attri_name: "<<at_name<<endl;
@@ -225,7 +225,7 @@ void Parser::Drop_index(vector<string> args){
         API_drop_index(indexname);
         //
         auto finish_time = std::chrono::high_resolution_clock::now();
-        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
         std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
@@ -248,7 +248,7 @@ void Parser::Select(vector<string> args){
         auto start_time = std::chrono::high_resolution_clock::now();
         API_select(tablename,conditions);
         auto finish_time = std::chrono::high_resolution_clock::now();
-        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
         std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
         return;
@@ -303,7 +303,7 @@ void Parser::Select(vector<string> args){
     auto start_time = std::chrono::high_resolution_clock::now();
     API_select(tablename,conditions);
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
     std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
@@ -330,7 +330,7 @@ void Parser::Selectpart(vector<string> args){
         auto start_time = std::chrono::high_resolution_clock::now();
         API_selectpart(s_attris,tablename,conditions);
         auto finish_time = std::chrono::high_resolution_clock::now();
-        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
         std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
         return;
@@ -389,7 +389,7 @@ void Parser::Selectpart(vector<string> args){
     auto start_time = std::chrono::high_resolution_clock::now();
     API_selectpart(s_attris, tablename,conditions);
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
     std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
@@ -438,7 +438,7 @@ void Parser::Insert(vector<string> args){
     auto start_time = std::chrono::high_resolution_clock::now();
     API_insert(tablename,value_list);
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
     std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
@@ -458,7 +458,7 @@ void Parser::Delete(vector<string> args){
         auto start_time = std::chrono::high_resolution_clock::now();
         API_delete(tablename,conditions);   
         auto finish_time = std::chrono::high_resolution_clock::now();
-        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
         std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
         return;
@@ -511,7 +511,7 @@ void Parser::Delete(vector<string> args){
     auto start_time = std::chrono::high_resolution_clock::now();
     API_delete(tablename,conditions);   
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
     std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
