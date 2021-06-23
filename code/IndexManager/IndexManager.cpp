@@ -940,6 +940,7 @@ bool IndexManager::Read()
 {
     return true;
 }
+/*
 int main(void)
 {
     IndexInfo<int> indexinfo("my test table", 2000, "grade", AType::Integer, 4);
@@ -979,5 +980,5 @@ int main(void)
     cout << "hello" << endl;
     return 0;
 }
-
+*/
 

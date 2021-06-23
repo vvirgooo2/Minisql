@@ -4,36 +4,4 @@ create table student2(
 	score float,
 	primary key(id) 
 );
-insert into student2 values(1080109968,'name9968',66.5);
-insert into student2 values(1080109969,'name9969',94.0);
-insert into student2 values(1080109970,'name9970',89.0);
-insert into student2 values(1080109971,'name9971',79.5);
-insert into student2 values(1080109972,'name9972',79.0);
-insert into student2 values(1080109973,'name9973',74.5);
-insert into student2 values(1080109974,'name9974',67.5);
-insert into student2 values(1080109975,'name9975',64.0);
-insert into student2 values(1080109976,'name9976',72.5);
-insert into student2 values(1080109977,'name9977',55.0);
-insert into student2 values(1080109978,'name9978',57.0);
-insert into student2 values(1080109979,'name9979',54.5);
-insert into student2 values(1080109980,'name9980',61.5);
-insert into student2 values(1080109981,'name9981',78.0);
-insert into student2 values(1080109982,'name9982',80.0);
-insert into student2 values(1080109983,'name9983',97.0);
-insert into student2 values(1080109984,'name9984',88.5);
-insert into student2 values(1080109985,'name9985',60.5);
-insert into student2 values(1080109986,'name9986',59.0);
-insert into student2 values(1080109987,'name9987',97.5);
-insert into student2 values(1080109988,'name9988',56.0);
-insert into student2 values(1080109989,'name9989',56.5);
-insert into student2 values(1080109990,'name9990',60.0);
-insert into student2 values(1080109991,'name9991',62.0);
-insert into student2 values(1080109992,'name9992',86.5);
-insert into student2 values(1080109993,'name9993',100.0);
-insert into student2 values(1080109994,'name9994',88.5);
-insert into student2 values(1080109995,'name9995',92.5);
-insert into student2 values(1080109996,'name9996',79.5);
-insert into student2 values(1080109997,'name9997',83.0);
-insert into student2 values(1080109998,'name9998',59.0);
-insert into student2 values(1080109999,'name9999',54.5);
-insert into student2 values(1080110000,'name10000',68.0);
+execfile query2;

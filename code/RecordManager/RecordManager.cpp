@@ -169,6 +169,13 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
     vector<Position> positions;
     positions=im.GetPosition(table.tablename,indexcon);
 
+#ifdef  INDEX_DEBUG
+    cout<<"positions's information:"<<endl;
+    for(auto t=positions.begin();t!=positions.end();t++){
+        cout<<"BlockID: "<<t->blockID<<" offset: "<<t->offset<<endl;
+    }
+#endif
+
     if(output){
         cout<<" | ";
         for(auto itr=attr.begin(); itr!= attr.end();itr++){
@@ -255,25 +262,21 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
                 block+=sizeof(float);
                 break;
             default:
-                cout<<"Invalid error";
-                throw "Unknow running error";
+                throw runtime_error("Unknown running error");
 
         }
     }
     //同步索引
+    vector<sqlvalue> values;
     for(int i=0;i<table.attri_names.size();i++){
         for(int j=0;j<table.index.size();j++){ 
-            vector<string> indexnamev; 
-            vector<sqlvalue> values;
-            if(table.attri_names[i]==table.index[j].first){
-                string indexname=table.index[j].second;
-                indexnamev.push_back(indexname);
+            if(table.attri_names[i]==table.index[j].first){  //只要有索引就插入，注意sqlvalue里面要有属性名
                 sqlvalue v=record.element[i];
                 values.push_back(v);  
             }
-            im.InsertKey(table.tablename,indexnamev,values,pos);
-        }
+        }   
     }
+    //im.InsertKey(table.tablename,values,pos);
     bm.ret_block(B);
     return true;
 }
@@ -305,19 +308,16 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
                 block[i*length]=0;
                 /*delete index on bplus tree*/
                 //检查每个属性是否有索引，有的话就更新
+                vector<sqlvalue> values;
                 for(int i=0;i<table.attri_names.size();i++){
                     for(int j=0;j<table.index.size();j++){ 
-                        vector<string> indexnamev; 
-                        vector<sqlvalue> values;
                         if(table.attri_names[i]==table.index[j].first){
-                            string indexname=table.index[j].second;
-                            indexnamev.push_back(indexname);
                             sqlvalue v=t.element[i];
                             values.push_back(v);  
-                        }
-                        im.DeleteKey(table.tablename,indexnamev,values);
+                        }   
                     }
                 }
+                im.DeleteKey(table.tablename,values);
             }
         }
         bm.ret_block(B);
@@ -349,6 +349,7 @@ bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr, 
     }
     int rcdPerBlock = (4096-BLOCK_HEADER_SIZE)/length;
     int blockID=0;
+    int total=get_total_block_num(table.tablename);
     Block *B=bm.get_block(table.tablename,blockID);
     char* block=B->data_begin;
 
@@ -356,25 +357,24 @@ bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr, 
     Result res;
     Row r;
     Position pos;
-    vector<string> indexnamev;
-    indexnamev.push_back(indexname);
     //搜索所有条目
     while(block){
         for(int i=0;i<rcdPerBlock;i++){
-            if(block[i*length]==1) continue;
+            if(block[i*length]!=1) continue;
+            //every key should be added into index
             readTuple(block,i*length,table.attri_types,t);
             pos.clear();
             pos.blockID=blockID;
             pos.offset=i*length;
-            sqlvalue v=t.element[attrpos];
             vector<sqlvalue> values;
+            sqlvalue v=t.element[attrpos];
             values.push_back(v);
-            im.InsertKey(table.tablename,indexnamev,values,pos);
+            im.InsertKey(table.tablename,values,pos);
         }
         blockID++;
-        block=NULL;
-        //B=bm.get_block(table.tablename,blockID);  怎么判断这是文件里最后一块
-        //block=B->data_begin;
+        if(blockID>total) break;
+        B=bm.get_block(table.tablename,blockID); 
+        block=B->data_begin;
     }
     return true;
 }

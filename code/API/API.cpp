@@ -148,6 +148,7 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
 //无问题给record插入，顺便同步给index
 void API_insert(string tablename,vector<sqlvalue> value_list){
     //check the table
+   if(value_list[1].str=="name5000") cout<<value_list[1].str<<endl;
     Table table=get_test_table();
     //prepare the tuple
     if(value_list.size()!=table.attri_count) throw std::runtime_error("The number of values is not equal to the number of attributes!");
@@ -160,9 +161,13 @@ void API_insert(string tablename,vector<sqlvalue> value_list){
         if(value_list[i].type.type!=table.attri_types[i].type){
             throw std::runtime_error("Type of value is violated.");
         }
+        if(value_list[i].type.type==AType::String&&value_list[i].str.size()>table.attri_types[i].char_sz){
+            throw std::runtime_error("You insert a too long string to "+table.attri_names[i]);
+        }
         if(value_list[i].type.type==AType::String){
             value_list[i].type.char_sz=table.attri_types[i].char_sz;
         }
+        value_list[i].type.attri_name=table.attri_names[i];
     } 
     //check duplicate
     for(int i=0;i<value_list.size();i++){
