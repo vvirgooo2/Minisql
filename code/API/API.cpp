@@ -54,6 +54,37 @@ Table get_test_table(){
 //判断属性是否符合条件
 //传给Catalog建表，传给Record建文件，传给Index建主键索引
 void API_create_table(string tablename,vector<attri_type>attris){
+    Table table = get_test_table();
+
+
+    //先判断有无表名冲突
+    if (cm->ExistTable(tablename)) {
+        std::cerr << "Table " << tablename << " already exists!" << std::endl;
+        
+        //return
+
+    }
+
+    //判断有无主键
+
+
+    //判断属性是否符合条件
+    for (auto &attr: attris) {
+        if (attr.type == AType::String) {
+            if (attr.char_sz < 1 || attr.char_sz > 255) {
+                std::cerr << "Char count out of range" << std::endl;
+                
+                //return
+            
+            }
+        }
+    }
+
+    //传给Catalog建表
+    // cm->CreateTable(tablename, attris);
+
+    //传给Index建主键索引
+
 
 }
 
@@ -61,6 +92,20 @@ void API_create_table(string tablename,vector<attri_type>attris){
 //判断存在
 //Catalog删除信息，Record删除表文件，Index删除有关索引
 void API_drop_table(string tablename){
+    //判断存在
+    if (!cm->ExistTable(tablename)) {
+        std::cerr << "Table not found!" << std::endl;
+        //return false;
+    }
+
+    auto &table = cm->GetTable(tablename);
+    //Catalog删除信息
+    cm->RemoveTable(table);
+    cm->WriteToFile();
+    std::cout << "Table " << tablename << " dropped." << std::endl;
+    //Record删除表文件
+    rm->dropTable(tablename);
+    //Index删除有关索引
 
 }
 
@@ -68,14 +113,93 @@ void API_drop_table(string tablename){
 //判断表，属性
 //传给Index建表，Catalog更新信息
 void API_create_index(string tablename,string indexname,string at_name){
+    // check if table exists
+    if (!cm->ExistTable(tablename)) {
+        std::cerr << "Table" << tablename << " not found!" << std::endl;
+        // return false;
+    }
 
+    // check if index not exists
+    if (cm->ExistIndex(indexname)) {
+        std::cerr << "Index name" << indexname << " exists!" << std::endl;
+        // return false;
+    }
+
+
+    auto &table = cm->GetTable(tablename);
+
+    // check if there already has an index
+    for (auto &index: table.index) {
+        if (index.first == at_name) {
+            // auto gen, not error
+            if (index.second.find("autoIndex_") == 0) {
+                index.second = indexname;
+                std::cout << "Create index " << indexname << " success" << std::endl;
+                //return true;
+            }
+            // manually gen index, error
+            std::cerr << "Index on the attribute " << at_name << " exists!" << std::endl;
+            // return false;
+        }
+    }
+
+    // find and check attr
+    attri_type type;
+    for (int i = 0; i < table.attri_names.size(); ++i) {
+        if (table.attri_names[i] == at_name) {
+            if (table.attri_types[i].unique) {
+                type = table.attri_types[i];
+                type.attri_name = table.attri_names[i];
+                break;
+            } else { // only unique attr can have index
+                std::cout << "Not a unique attribute!!" << std::endl;
+                // return false;
+            }
+        }
+    }
+
+
+    // call managers to create index
+
+
+    // auto res = rm->CreateIndex(table, type);
+    /*
+    table.index.emplace_back(at_name, indexname);
+    cm->WriteToFile();
+    if (res) {
+        std::cout << "Create index success" << std::endl;
+        // return true;
+    } else {
+        std::cerr << "Unknown failure!" << std::endl;
+        // return false;
+    }
+    */
 }
 
 //删除索引
 //传给index删除索引，Catalog更新信息
 void API_drop_index(string indexname){
-    
+    bool index = cm->ExistIndex(indexname);
+    if(!index){
+        std::cerr << "Index not found!" << std::endl;
+        // return
+    }
+    auto &table = cm->GetIndex(indexname);
+
+   for (auto &idx: table.index) {
+        if (idx.second == indexname) {
+            //传给index删除索引
+
+            table.index.erase(std::find_if(table.index.begin(), table.index.end(),
+                                           [&indexname](const std::pair<std::string, std::string> &item) {
+                                               return item.second == indexname;
+                                           }));
+            std::cout << "Index " << indexname << " dropped." << std::endl;
+            cm->WriteToFile();
+        }
+    }
 }
+
 
 //选择（全选）
 //判断表名，判断条件是否合理
