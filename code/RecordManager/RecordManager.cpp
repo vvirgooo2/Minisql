@@ -2,7 +2,7 @@
 #include"../IndexManager/IndexManager.h"
 #include"../BufferManager/BufferManager.h"
 #include<fstream>
-char blockBuffer[4096];
+#include<iomanip>
 extern BufferManage bm;
 extern IndexManager im;
 //打印结果
@@ -11,11 +11,10 @@ void RecordManager::print(const Result &res) const{ //打印结果
     for(auto const &row:res.row){
         cout<<" | ";
         for(auto const &col:row.col){
-            cout<<col<<" | ";
+            cout<<setw(10)<<col<<" | ";
         }
         cout<<"\n";
     }
-    cout<<res.row.size()<<" selected."<<endl;
 }  
 
 //检查元组是否符合条件
@@ -109,7 +108,7 @@ bool RecordManager::dropTable(const string tablename)
 //查找记录,返回条数,无须辅助
 //可能每个块头的偏移要计算一下
 int  RecordManager::selectRecord(const Table &table, const vector<string> &attr, const vector<condition> conditions,bool output)
-{   
+{   try{
     int length = 1;
     //计算每条记录的length
     for(auto itr= table.attri_types.begin(); itr!= table.attri_types.end();itr++){
@@ -117,23 +116,30 @@ int  RecordManager::selectRecord(const Table &table, const vector<string> &attr,
         else if(itr->type==AType::Integer) length+=sizeof(int);
         else if(itr->type==AType::Float)   length+=sizeof(float);
     }
-    int rcdPerBlock = (4096-HEADER_SIZE)/length;
+    int rcdPerBlock = (4096-BLOCK_HEADER_SIZE)/length;
     int blockID=0;
+    int total=get_total_block_num(table.tablename);
     Block *B=bm.get_block(table.tablename,blockID);
     char* block=B->data_begin;
+
     //output attris
-    cout<<" | ";
-    for(auto itr=attr.begin(); itr!= attr.end();itr++){
-        cout<<*itr<<" | ";
+    if(output){
+        cout<<" | ";
+        for(auto itr=attr.begin(); itr!= attr.end();itr++){
+            cout<<setw(10)<<*itr<<" | ";
+        }
+        cout<<endl;
     }
-    cout<<endl;
 
     Tuple t;
-    Result res;
+    int rownum = 0;
     Row r;
     
+        
+        
     //搜索所有条目
     while(block){
+        Result res;
         for(int i=0;i<rcdPerBlock;i++){
             if(block[i*length]!=1) continue;
             readTuple(block,i*length,table.attri_types,t);
@@ -142,13 +148,19 @@ int  RecordManager::selectRecord(const Table &table, const vector<string> &attr,
                 res.row.push_back(r);
             }
         }
+        if(output) print(res);
+        rownum+=res.row.size();
         blockID++;
-        block=NULL;
-        //B=bm.get_block(table.tablename,blockID);  怎么判断这是文件里最后一块
-        //block=B->data_begin;
+        if(blockID>total) break;
+        B=bm.get_block(table.tablename,blockID);  
+        block=B->data_begin;
     }
-    if(output) print(res);
-    return res.row.size();
+    if(output) cout<<rownum<<" selected."<<endl;
+    return rownum;
+    }
+    catch(std::runtime_error &error){
+        cout << "[Error] " << error.what() << endl;
+    }
 }
 
 //查找记录，返回条数，有索引,可以传进来一个有索引的条件
@@ -157,11 +169,13 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
     vector<Position> positions;
     positions=im.GetPosition(table.tablename,indexcon);
 
-    cout<<" | ";
-    for(auto itr=attr.begin(); itr!= attr.end();itr++){
-        cout<<*itr<<" | ";
+    if(output){
+        cout<<" | ";
+        for(auto itr=attr.begin(); itr!= attr.end();itr++){
+            cout<<setw(10)<<*itr<<" | ";
+        }
+        cout<<endl;
     }
-    cout<<endl;
 
     //先用索引信息定位，然后进一步判断
     auto itr=positions.begin();
@@ -173,8 +187,8 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
         char *block=B->data_begin;
         readTuple(block,itr->offset,table.attri_types,t);
         if(validCheck(conditions,t)){
-                r=t.fetchRow(table.attri_names,attr);
-                res.row.push_back(r);
+            r=t.fetchRow(table.attri_names,attr);
+            res.row.push_back(r);
         }
     }
     if(output) print(res);
@@ -184,11 +198,12 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
 //插入记录
 bool RecordManager::insertRecord(const Table &table, const Tuple &record)
 {
-    int blockID=0;
+    int blockID=get_total_block_num(table.tablename);
     //怎么get到最后一块
     Block *B=bm.get_block(table.tablename,blockID);
     char* block=B->data_begin;
 
+    Position pos;
     int length = 1;
     //计算每条记录的length
     for(auto itr= table.attri_types.begin(); itr!= table.attri_types.end();itr++){
@@ -196,7 +211,7 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
         else if(itr->type==AType::Integer) length+=sizeof(int);
         else if(itr->type==AType::Float)   length+=sizeof(float);
     }
-    int rcdPerBlock= (4096-HEADER_SIZE)/length;  //一块最多多少个
+    int rcdPerBlock= (4096-BLOCK_HEADER_SIZE)/length;  //一块最多多少个
     int i=0;
     bool flag=false;
     for(;i<rcdPerBlock;i++){
@@ -204,13 +219,20 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
         else{
             flag=true;          //如果该块有空间
             block+=i*length;    //把block指针调到插入位置
+            pos.blockID=blockID;
+            pos.offset=i*length;
             break;
         }
     }
 
     if(!flag){
         //get到下一块，顺便把这张表的总块数+1
-
+        blockID++;
+        B=bm.get_block(table.tablename,blockID);
+        edit_total_block_num(table.tablename,1);
+        block=B->data_begin;
+        pos.blockID=blockID;
+        pos.offset=0;
     }
 
     *block++ = 1;   //valid=1
@@ -238,6 +260,20 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
 
         }
     }
+    //同步索引
+    for(int i=0;i<table.attri_names.size();i++){
+        for(int j=0;j<table.index.size();j++){ 
+            vector<string> indexnamev; 
+            vector<sqlvalue> values;
+            if(table.attri_names[i]==table.index[j].first){
+                string indexname=table.index[j].second;
+                indexnamev.push_back(indexname);
+                sqlvalue v=record.element[i];
+                values.push_back(v);  
+            }
+            im.InsertKey(table.tablename,indexnamev,values,pos);
+        }
+    }
     bm.ret_block(B);
     return true;
 }
@@ -252,13 +288,14 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
         else if(itr->type==AType::Integer) length+=sizeof(int);
         else if(itr->type==AType::Float)   length+=sizeof(float);
     }
-    int rcdPerBlock= (4096-HEADER_SIZE)/length;  //一块最多多少个
+    int rcdPerBlock= (4096-BLOCK_HEADER_SIZE)/length;  //一块最多多少个
     int blockID=0;
-    
+    int total=get_total_block_num(table.tablename);
     Block *B=bm.get_block(table.tablename,blockID);
     char *block=B->data_begin;
     
     Tuple t;
+    
     //搜索所有条目
     while(block){
         for(int i=0;i<rcdPerBlock;i++){
@@ -267,11 +304,25 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
             if(validCheck(conditions,t)){    //此条记录应该被删除
                 block[i*length]=0;
                 /*delete index on bplus tree*/
+                //检查每个属性是否有索引，有的话就更新
+                for(int i=0;i<table.attri_names.size();i++){
+                    for(int j=0;j<table.index.size();j++){ 
+                        vector<string> indexnamev; 
+                        vector<sqlvalue> values;
+                        if(table.attri_names[i]==table.index[j].first){
+                            string indexname=table.index[j].second;
+                            indexnamev.push_back(indexname);
+                            sqlvalue v=t.element[i];
+                            values.push_back(v);  
+                        }
+                        im.DeleteKey(table.tablename,indexnamev,values);
+                    }
+                }
             }
         }
-        blockID++;
-        //block=NULL;
         bm.ret_block(B);
+        blockID++;
+        if(blockID>total) break;
         //怎么判断是最后一块
         B=bm.get_block(table.tablename,blockID);
         block=B->data_begin;
@@ -280,7 +331,7 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
 }
 
 //创建索引
-bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr, const vector<string> indexname){
+bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr, const string indexname){
     //bool InsertKey(const string &tablename, vector<string> index_name, 
     //vector<sqlvalue> v, const Position& p);
     int attrpos;
@@ -296,7 +347,7 @@ bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr, 
         else if(itr->type==AType::Integer) length+=sizeof(int);
         else if(itr->type==AType::Float)   length+=sizeof(float);
     }
-    int rcdPerBlock = (4096-HEADER_SIZE)/length;
+    int rcdPerBlock = (4096-BLOCK_HEADER_SIZE)/length;
     int blockID=0;
     Block *B=bm.get_block(table.tablename,blockID);
     char* block=B->data_begin;
@@ -305,18 +356,20 @@ bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr, 
     Result res;
     Row r;
     Position pos;
-    pos.clear();
+    vector<string> indexnamev;
+    indexnamev.push_back(indexname);
     //搜索所有条目
     while(block){
         for(int i=0;i<rcdPerBlock;i++){
-            if(block[i*length]!=1) continue;
+            if(block[i*length]==1) continue;
             readTuple(block,i*length,table.attri_types,t);
+            pos.clear();
             pos.blockID=blockID;
             pos.offset=i*length;
             sqlvalue v=t.element[attrpos];
             vector<sqlvalue> values;
-            for(int i=0;i<indexname.size();i++) values.push_back(v);
-            im.InsertKey(table.tablename,indexname,values,pos);
+            values.push_back(v);
+            im.InsertKey(table.tablename,indexnamev,values,pos);
         }
         blockID++;
         block=NULL;

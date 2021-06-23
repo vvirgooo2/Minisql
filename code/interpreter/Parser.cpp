@@ -130,7 +130,7 @@ void Parser::Create_table(vector<string> args){
         else i++;
     }
     
-    /*debug part
+#ifdef  DEBUG
     for(auto itr=attris.begin();itr!=attris.end();itr++){
         cout<<itr->attri_name<<" ";
         switch(itr->type){
@@ -143,14 +143,15 @@ void Parser::Create_table(vector<string> args){
         if(itr->primary) cout<<"  primary ";
         if(itr->unique) cout<<"  unique  ";
         cout<<endl;
-    }*/
+    }
+#endif
     /*  调用API,传入表名和各属性  */
     auto start_time = std::chrono::high_resolution_clock::now();
     API_create_table(tablename,attris);
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
-    std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+    if(outtime)std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
     catch (std::out_of_range) { throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax! (create table)");}
 }
@@ -166,9 +167,9 @@ void Parser::Drop_table(vector<string> args){
         auto start_time = std::chrono::high_resolution_clock::now();
         API_drop_table(tablename);
         auto finish_time = std::chrono::high_resolution_clock::now();
-        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
-        std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+        if(outtime)std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
     }
     catch (std::out_of_range) {
@@ -194,10 +195,12 @@ void Parser::Create_index(vector<string> args){
                 auto start_time = std::chrono::high_resolution_clock::now();
                 API_create_index(tablename,indexname,at_name);
                 auto finish_time = std::chrono::high_resolution_clock::now();
-                int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+                long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
                 if (tempTime == 0) tempTime = 10;
-                std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+                if(outtime) std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+#ifdef DEBUG
                 cout<<"table: "<<tablename<<" index: "<<indexname<<" attri_name: "<<at_name<<endl;
+#endif
             }
             else { throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Create index)");}
         }
@@ -219,15 +222,17 @@ void Parser::Drop_index(vector<string> args){
     indexname=args.at(2);
     if(args.size()>3) { throw std::runtime_error("SYNTAX ERROR: You can only drop one index once");}
     else {
+#ifdef DEBUG
         cout<<"API drop index "<<indexname<<endl;
+#endif
         auto start_time = std::chrono::high_resolution_clock::now();
         //
         API_drop_index(indexname);
         //
         auto finish_time = std::chrono::high_resolution_clock::now();
-        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
-        std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+        if(outtime)std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
     }
     catch (std::out_of_range) {
@@ -248,9 +253,9 @@ void Parser::Select(vector<string> args){
         auto start_time = std::chrono::high_resolution_clock::now();
         API_select(tablename,conditions);
         auto finish_time = std::chrono::high_resolution_clock::now();
-        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
-        std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+        if(outtime) std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
         return;
     }
     if(args.at(i)!="where") {throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");}
@@ -290,22 +295,20 @@ void Parser::Select(vector<string> args){
         else if(args.at(i+1)=="and") i+=2;
         else break;
     }
-    /*/debug
+#ifdef DEBUG
     auto itr=conditions.begin();
     for(;itr!=conditions.end();itr++){
         cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
         cout<<itr->val.toStr();
         cout<<endl;
-    }*/
-    //检查表，检查参数模块没有
-    //这里有点问题，应该还要对照表的列属性对比检查一遍
-    //检查可以放到API里面
+    }
+#endif
     auto start_time = std::chrono::high_resolution_clock::now();
     API_select(tablename,conditions);
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
-    std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+    if(outtime) std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
     catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");
@@ -330,9 +333,9 @@ void Parser::Selectpart(vector<string> args){
         auto start_time = std::chrono::high_resolution_clock::now();
         API_selectpart(s_attris,tablename,conditions);
         auto finish_time = std::chrono::high_resolution_clock::now();
-        int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
-        std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+        if(outtime) std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
         return;
     }
     if(args.at(++i)!="where") {throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");}
@@ -372,7 +375,7 @@ void Parser::Selectpart(vector<string> args){
         else if(args.at(i+1)=="and") i+=2;
         else break;
     }
-    /*debug
+#ifdef DEBUG
     auto tr=s_attris.begin();
     cout<<"select: ";
     for(;tr!=s_attris.end();tr++){
@@ -384,14 +387,14 @@ void Parser::Selectpart(vector<string> args){
         cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
         cout<<itr->val.toStr();
         cout<<endl;
-    }*/
-
+    }
+#endif
     auto start_time = std::chrono::high_resolution_clock::now();
     API_selectpart(s_attris, tablename,conditions);
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
-    std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+    if(outtime) std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
     catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");
@@ -428,19 +431,20 @@ void Parser::Insert(vector<string> args){
         else i++;
         if(args.at(i)==")") break;
     }
-    /*debug
+#ifdef DEBUG
     auto itr=value_list.begin();
     for(;itr!=value_list.end();itr++){
         cout<<itr->toStr();
         cout<<endl;
-    }*/
+    }
+#endif
     
     auto start_time = std::chrono::high_resolution_clock::now();
     API_insert(tablename,value_list);
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
-    std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+    if(outtime) std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
     catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Insert)");
@@ -453,10 +457,15 @@ void Parser::Delete(vector<string> args){
     try{
     if(args.at(1)!="from"){ throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");}
     string tablename=args.at(2);
-    if(args.at(3)!="where"){ throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");}
     vector<condition> conditions;
-    if(args.size()==4){
-
+    if(args.size()==3){
+        auto start_time = std::chrono::high_resolution_clock::now();
+        API_delete(tablename,conditions);   
+        auto finish_time = std::chrono::high_resolution_clock::now();
+        long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+        if (tempTime == 0) tempTime = 10;
+        if(outtime) std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+        return;
     }
     int i=4;
     while(1){
@@ -494,21 +503,21 @@ void Parser::Delete(vector<string> args){
         else if(args.at(i+1)=="and") i+=2;
         else break;
     }
-    /*debug
+#ifdef DEBUG
     auto itr=conditions.begin();
     for(;itr!=conditions.end();itr++){
         cout<<itr->val.type.attri_name<<" "<<itr->op<<" ";
         cout<<itr->val.toStr();
         cout<<endl;
-    }*/
-   
+    }
+#endif
     //call API and timer
     auto start_time = std::chrono::high_resolution_clock::now();
     API_delete(tablename,conditions);   
     auto finish_time = std::chrono::high_resolution_clock::now();
-    int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
-    std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
+    if(outtime) std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;
     }
     catch (std::out_of_range) {
         throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");
@@ -519,9 +528,11 @@ void Parser::Execfile(vector<string> args){
     
     if(args.size()>2) { cout<<"syntax error!"<<endl; return;}
     Parser parser;
+    parser.outtime = false;
     string ins;
     string filename=args.at(1);
     ifstream infile(filename);
+    auto start_time = std::chrono::high_resolution_clock::now();
     while (getline(infile, ins)) {
        try{ parser.input(ins); }
        catch (std::runtime_error &error) {
@@ -529,4 +540,8 @@ void Parser::Execfile(vector<string> args){
             parser.flushBuffer();
         }
     } 
+    auto finish_time = std::chrono::high_resolution_clock::now();
+    long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
+    if (tempTime == 0) tempTime = 10;
+    if(outtime) std::cerr << "(" << setiosflags(ios::fixed) << setw(9) << setprecision(9) << tempTime * 1e-9 << " s)" << std::endl;   
 }
