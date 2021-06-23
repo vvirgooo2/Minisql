@@ -159,30 +159,26 @@ void CatalogManager::LoadFromFile() {
  * schemaList schemas vector
  * PrimaryKey primary key string
  */
-void CatalogManager::CreateTable(const std::string &TableName,
-                                 const std::vector<std::pair<std::string, attri_type>> &schemaList,
-                                 const std::string &PrimaryKey) {
+void CatalogManager::CreateTable(const std::string &TableName,vector<attri_type>attris) {
     Table table;
+    attri_type type;
     table.tablename = TableName;
-    table.attri_count = (int) schemaList.size();
-    int len = 0;
+    table.attri_count = attris.size();
     char autoIndex = '1';
 
-
+    
 
     // Make attribute
-    for (auto &schema: schemaList) {
-        //len += schema.second.getsize();
-        table.attri_names.push_back(schema.first);
-        auto t = schema.second;
-        t.attri_name = schema.first;
-        table.attri_types.push_back(t);
-        if (schema.first == PrimaryKey) {
-            (table.attri_types.end() - 1)->primary = true;
-            (table.attri_types.end() - 1)->unique = true;
-        }
+    for (const auto &attr: attris) {
+        table.attri_names.push_back(attr.attri_name);
+
+
+
+        (table.attri_types.end() - 1)->primary = true;
+        (table.attri_types.end() - 1)->unique = true;
+
+
     }
-    table.row_num = len;
 
 //    // Setup index
 //    for (auto &type: table.attrType) {

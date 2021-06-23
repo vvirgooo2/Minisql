@@ -1,5 +1,5 @@
-#ifndef _CATALOGMANAGER_H
-#define _CATALOGMANAGER_H
+#ifndef MINISQL_CATALOGMANAGER_H
+#define MINISQL_CATALOGMANAGER_H
 #include "../SqlDataType.h"
 #include <string>
 #include <vector>
@@ -12,8 +12,7 @@ public:
     ~CatalogManager();
 
     void CreateTable(const std::string &TableName,
-                     const std::vector<std::pair<std::string, attri_type>> &schemaList,
-                     const std::string &PrimaryKey);
+                     const vector<attri_type>attris);
 
     bool ExistTable(const std::string &table) const;
 
