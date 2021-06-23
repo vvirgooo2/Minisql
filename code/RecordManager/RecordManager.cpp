@@ -3,6 +3,7 @@
 #include"../BufferManager/BufferManager.h"
 #include<fstream>
 #include<iomanip>
+#include<cstdio>
 extern BufferManage bm;
 extern IndexManager im;
 //打印结果
@@ -101,7 +102,7 @@ bool RecordManager::createTable(const string tablename)
 //删除表文件
 bool RecordManager::dropTable(const string tablename)
 {
-    //BufferManager_dropTableFile(tablename+".dbf");
+    remove(tablename.c_str());
     return true;
 }
 

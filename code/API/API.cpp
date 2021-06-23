@@ -11,7 +11,7 @@ using namespace std;
 RecordManager *rm;
 BufferManage bm;
 IndexManager im;
-CatalogManager *cm;
+CatalogManager cm;
 Table get_test_table(){
  //属性
     vector<attri_type> attris;
@@ -54,26 +54,34 @@ Table get_test_table(){
 //判断属性是否符合条件
 //传给Catalog建表，传给Record建文件，传给Index建主键索引
 void API_create_table(string tablename,vector<attri_type>attris){
-
     //先判断有无表名冲突
-    if (cm->ExistTable(tablename)) throw std::runtime_error("Table already exists!");
+#ifdef CMDEBUG
+    auto &test=cm.GetTable(tablename);
+    for(int i=0;i<test.attri_names.size();i++){
+        cout<<test.attri_names[i]<<endl;
+    }
+    for(auto itr=test.index.begin(); itr!= test.index.end();itr++){
+        cout<<itr->first<<" "<<itr->second<<endl;
+    }
+#endif
+    if (cm.ExistTable(tablename)) throw std::runtime_error("Table already exists!");
     //判断有无主键
     int primaryflag=0;
     for(int i=0;i<attris.size();i++){
         if(attris[i].primary==true) primaryflag++;
-        if(attris[i].char_sz>255) 
+        if(attris[i].type==AType::String&&attris[i].char_sz>255) 
             throw std::runtime_error("Length of char is bigger than 255");
-        if(attris[i].char_sz<=0)
-            throw std::runtime_error("Length of char is smaller than 255");
+        if(attris[i].type==AType::String&&attris[i].char_sz<=0)
+            throw std::runtime_error("Length of char is smaller than 0");
     }
     if(primaryflag==0) throw std::runtime_error("No primary key");
     else if(primaryflag>1) throw std::runtime_error("More than one primary key");
     //传给Catalog建表
-    cm->CreateTable(tablename, attris);
-
+    cout<<attris[1].char_sz<<endl;
+    cm.CreateTable(tablename, attris);
+    cm.WriteToFile();
     //传给Index建主键索引
-
-
+    
 }
 
 //删除表
@@ -81,19 +89,21 @@ void API_create_table(string tablename,vector<attri_type>attris){
 //Catalog删除信息，Record删除表文件，Index删除有关索引
 void API_drop_table(string tablename){
     //判断存在
-    if (!cm->ExistTable(tablename)) {
-        std::cerr << "Table not found!" << std::endl;
+    if (!cm.ExistTable(tablename)) {
+       throw std::runtime_error("Not exist this table");
         //return false;
     }
-
-    auto &table = cm->GetTable(tablename);
+    auto &table = cm.GetTable(tablename);
     //Catalog删除信息
-    cm->RemoveTable(table);
-    cm->WriteToFile();
+    cm.RemoveTable(table);
+    cm.WriteToFile();
     std::cout << "Table " << tablename << " dropped." << std::endl;
     //Record删除表文件
     rm->dropTable(tablename);
     //Index删除有关索引
+    for(int i=0;i<table.index.size();i++){
+        DeleteIndex(tablename, table.index[i].second);
+    }
 
 }
 
@@ -102,19 +112,19 @@ void API_drop_table(string tablename){
 //传给Index建表，Catalog更新信息
 void API_create_index(string tablename,string indexname,string at_name){
     // check if table exists
-    if (!cm->ExistTable(tablename)) {
+    if (!cm.ExistTable(tablename)) {
         std::cerr << "Table" << tablename << " not found!" << std::endl;
         // return false;
     }
 
     // check if index not exists
-    if (cm->ExistIndex(indexname)) {
+    if (cm.ExistIndex(indexname)) {
         std::cerr << "Index name" << indexname << " exists!" << std::endl;
         // return false;
     }
 
 
-    auto &table = cm->GetTable(tablename);
+    auto &table = cm.GetTable(tablename);
 
     // check if there already has an index
     for (auto &index: table.index) {
@@ -167,12 +177,12 @@ void API_create_index(string tablename,string indexname,string at_name){
 //删除索引
 //传给index删除索引，Catalog更新信息
 void API_drop_index(string indexname){
-    bool index = cm->ExistIndex(indexname);
+    bool index = cm.ExistIndex(indexname);
     if(!index){
         std::cerr << "Index not found!" << std::endl;
         // return
     }
-    auto &table = cm->GetIndex(indexname);
+    auto &table = cm.GetIndex(indexname);
 
    for (auto &idx: table.index) {
         if (idx.second == indexname) {
@@ -183,7 +193,7 @@ void API_drop_index(string indexname){
                                                return item.second == indexname;
                                            }));
             std::cout << "Index " << indexname << " dropped." << std::endl;
-            cm->WriteToFile();
+            cm.WriteToFile();
         }
     }
 }
@@ -193,7 +203,8 @@ void API_drop_index(string indexname){
 //判断表名，判断条件是否合理
 //传给record
 void API_select(string tablename, vector<condition> conditions){
-    Table table=get_test_table();
+    if(!cm.ExistTable(tablename)) throw std::runtime_error("No such table!");
+    Table table=cm.GetTable(tablename);
     vector<string> attris=table.attri_names;
     API_selectpart(attris,tablename,conditions);
 }
@@ -202,7 +213,8 @@ void API_select(string tablename, vector<condition> conditions){
 //判断属性名，条件的合理性
 //注意属性名参数只有name成员被赋值了
 void API_selectpart(vector<string> attris, string tablename, vector<condition> conditions){
-    Table table=get_test_table();
+    if(!cm.ExistTable(tablename)) throw std::runtime_error("No such table!");
+    auto table=cm.GetTable(tablename);
     //check the table
     //检查属性是否存在
     bool attrExist=false;
@@ -260,8 +272,8 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
 //无问题给record插入，顺便同步给index
 void API_insert(string tablename,vector<sqlvalue> value_list){
     //check the table
-   if(value_list[1].str=="name5000") cout<<value_list[1].str<<endl;
-    Table table=get_test_table();
+    if(!cm.ExistTable(tablename)) throw std::runtime_error("No such table!");
+    Table table=cm.GetTable(tablename);
     //prepare the tuple
     if(value_list.size()!=table.attri_count) throw std::runtime_error("The number of values is not equal to the number of attributes!");
     for(int i=0;i<value_list.size();i++){
@@ -317,9 +329,9 @@ void API_insert(string tablename,vector<sqlvalue> value_list){
 //预处理条件
 //给record删除，同步index
 void API_delete(string tablename,vector<condition> conditions){
-    Table table=get_test_table();
+    if(!cm.ExistTable(tablename)) throw std::runtime_error("No such table!");
     //check the table
-
+    Table table=cm.GetTable(tablename);
     //check the conditions
     bool attrFetch=false;
     //处理条件，int与float,主要是类型冲突
