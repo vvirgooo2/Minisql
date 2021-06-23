@@ -41,6 +41,7 @@ public:
 
 };
 
+
 // 下面是磁盘操作函数
 Block* fetch_block_disk(string TableName, int BlockId);
 void write_block_disk(Block*blk);
