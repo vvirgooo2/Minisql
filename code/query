@@ -4,4 +4,3 @@ create table student2(
 	score float,
 	primary key(id) 
 );
-execfile query2;

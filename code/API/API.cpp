@@ -54,34 +54,22 @@ Table get_test_table(){
 //判断属性是否符合条件
 //传给Catalog建表，传给Record建文件，传给Index建主键索引
 void API_create_table(string tablename,vector<attri_type>attris){
-    Table table = get_test_table();
-
 
     //先判断有无表名冲突
-    if (cm->ExistTable(tablename)) {
-        std::cerr << "Table " << tablename << " already exists!" << std::endl;
-        
-        //return
-
-    }
-
+    if (cm->ExistTable(tablename)) throw std::runtime_error("Table already exists!");
     //判断有无主键
-
-
-    //判断属性是否符合条件
-    for (auto &attr: attris) {
-        if (attr.type == AType::String) {
-            if (attr.char_sz < 1 || attr.char_sz > 255) {
-                std::cerr << "Char count out of range" << std::endl;
-                
-                //return
-            
-            }
-        }
+    int primaryflag=0;
+    for(int i=0;i<attris.size();i++){
+        if(attris[i].primary==true) primaryflag++;
+        if(attris[i].char_sz>255) 
+            throw std::runtime_error("Length of char is bigger than 255");
+        if(attris[i].char_sz<=0)
+            throw std::runtime_error("Length of char is smaller than 255");
     }
-
+    if(primaryflag==0) throw std::runtime_error("No primary key");
+    else if(primaryflag>1) throw std::runtime_error("More than one primary key");
     //传给Catalog建表
-    // cm->CreateTable(tablename, attris);
+    cm->CreateTable(tablename, attris);
 
     //传给Index建主键索引
 
