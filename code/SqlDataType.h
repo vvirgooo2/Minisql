@@ -180,8 +180,8 @@ class IndexInfo
             p = new Position[capacity];
         }
         ~IndexInfo(){
-            delete keys;
-            delete p;
+            delete []keys;
+            delete []p;
         };
         void AddKey(const T key, const int blockid, const int offset)
         {

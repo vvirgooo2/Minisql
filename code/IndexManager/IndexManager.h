@@ -10,6 +10,8 @@
 #include<iomanip>
 #include<stdexcept>
 #include<vector>
+#include<fstream>
+#include<typeinfo>
 
 template <typename T>
 class BTNode
@@ -39,7 +41,8 @@ class BTree
     public:
         AType type;
         string attr_name;
-        int n;
+        int n; // the order of each B+Tree
+        int num_keys, key_maxsize;
         BTNode<T> *root, *first;
         BTree() {};
         BTree(IndexInfo<T> &indexinfo);
@@ -49,6 +52,7 @@ class BTree
         bool DeleteKey(T key);
         BTNode<T> *Find(T key);
         vector<Position> GetPosition(T val, int op);
+
 
 };
 //the indices for one table
@@ -97,4 +101,19 @@ class IndexManager
         TableIndex *FindTable(const string &tablename);
         void Error();
 };
+bool clearkey(int &key)
+{
+    key = 0;
+    return true;
+}
+bool clearkey(float &key)
+{
+    key = 0;
+    return true;
+}
+bool clearkey(string &key)
+{
+    key.clear();
+    return true;
+}
 #endif
