@@ -1,10 +1,11 @@
 #include "CatalogManager.h"
 #include "../SqlDataType.h"
 #include "../RecordManager/RecordManager.h"
+#include "../IndexManager/IndexManager.h"
 #include <fstream>
 
 extern RecordManager *rm;
-
+extern IndexManager im;
 /**
  * Constructor
  */
@@ -125,6 +126,7 @@ void CatalogManager::LoadFromFile() {
                 type.type.type = AType::Integer ;
             } else if (typeName == "char") {
                 type.type.type = AType::String;
+                type.type.char_sz=size;
             } else if (typeName == "float") {
                 type.type.type = AType::Float;
             } else {
@@ -159,39 +161,37 @@ void CatalogManager::LoadFromFile() {
  * schemaList schemas vector
  * PrimaryKey primary key string
  */
-void CatalogManager::CreateTable(const std::string &TableName,
-                                 const std::vector<std::pair<std::string, attri_type>> &schemaList,
-                                 const std::string &PrimaryKey) {
+void CatalogManager::CreateTable(const std::string &TableName,vector<attri_type>attris) {
     Table table;
+
     table.tablename = TableName;
-    table.attri_count = (int) schemaList.size();
-    int len = 0;
+    table.attri_count = attris.size();
+    table.attri_types = attris;
+
     char autoIndex = '1';
 
-
-
     // Make attribute
-    for (auto &schema: schemaList) {
-        //len += schema.second.getsize();
-        table.attri_names.push_back(schema.first);
-        auto t = schema.second;
-        t.attri_name = schema.first;
-        table.attri_types.push_back(t);
-        if (schema.first == PrimaryKey) {
-            (table.attri_types.end() - 1)->primary = true;
-            (table.attri_types.end() - 1)->unique = true;
-        }
+    for (const auto &attr: attris) {
+        table.attri_names.push_back(attr.attri_name);
+        cout<<attr.attri_name;
     }
-    table.row_num = len;
-
-//    // Setup index
-//    for (auto &type: table.attrType) {
-//        if (type.unique && !type.primary) {
-//            table.index.emplace_back(std::make_pair(type.attrName, std::string("autoIndex_") + (autoIndex++)));
-//            rm->createIndex(table, type);
-//        }
-//    }
+    attri_type pri_index;
+   // Record index primary
+   for (auto &type: table.attri_types) {
+       if (type.primary) {
+           table.index.emplace_back(std::make_pair(type.attri_name, std::string("autoIndex_") + (autoIndex++)));
+           pri_index=type;
+       }
+   }
     tables.push_back(table);
+    //创建主键索引
+    if(pri_index.type==AType::String){
+        IndexInfo<string> info;
+        info.capacity=0;
+        info.key_maxsize=pri_index.char_sz;s
+        info.type=AType::String;
+    }
+
 }
 
 /**
