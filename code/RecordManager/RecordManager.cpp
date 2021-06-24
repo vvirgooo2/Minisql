@@ -104,6 +104,7 @@ bool RecordManager::createTable(const string tablename)
 bool RecordManager::dropTable(const string tablename)
 {
     remove(tablename.c_str());
+    bm.drop_table(tablename);
     return true;
 }
 

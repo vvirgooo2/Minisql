@@ -39,7 +39,7 @@ void BufferManage::drop_table(string TableName)
     for(int i = 0; i < MAX_BlockNumber; i++)
     {
         if(Buffer_pool[i].TableName == TableName)
-            Buufer_pool[i].BlockId = -1;
+            Buffer_pool[i].BlockId = -1;
     }
     return;
 }
