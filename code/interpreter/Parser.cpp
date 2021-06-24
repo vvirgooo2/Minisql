@@ -275,7 +275,7 @@ void Parser::Select(vector<string> args){
         i++;
         //sqlvalue
         string value=args.at(i);
-        if(value.at(0)=='\''&&value.at(value.length()-1)=='\''){
+        if(value.at(0)=='\''||value.at(0)=='\"'&&value.at(value.length()-1)=='\''||value.at(value.length()-1)=='\"'){
             con.val.type.type=AType::String;
             con.val.type.attri_name=con.name;
             con.val.str=value.substr(1,value.length()-2);

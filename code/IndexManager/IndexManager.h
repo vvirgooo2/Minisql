@@ -101,19 +101,5 @@ class IndexManager
         TableIndex *FindTable(const string &tablename);
         void Error();
 };
-bool clearkey(int &key)
-{
-    key = 0;
-    return true;
-}
-bool clearkey(float &key)
-{
-    key = 0;
-    return true;
-}
-bool clearkey(string &key)
-{
-    key.clear();
-    return true;
-}
+
 #endif

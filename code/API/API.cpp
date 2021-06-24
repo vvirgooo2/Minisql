@@ -151,7 +151,7 @@ void API_create_index(string tablename,string indexname,string at_name){
     }
     
     //call record manager to add nodes
-   // rm->CreateIndex(table,table.attri_types[attrFetch]);
+    rm->CreateIndex(table,table.attri_types[attrFetch]);
 }
 
 //删除索引
@@ -163,6 +163,7 @@ void API_drop_index(string indexname){
     }
     auto &table = cm.GetIndex(indexname);
     //catalogshanchu 
+    string att;
     for (auto &idx: table.index) {
         if (idx.second == indexname) {
             //传给index删除索引
@@ -170,12 +171,13 @@ void API_drop_index(string indexname){
                                            [&indexname](const std::pair<std::string, std::string> &item) {
                                                return item.second == indexname;
                                            }));
+            att=idx.first;
             std::cout << "Index " << indexname << " dropped." << std::endl;
         }
     }
     cm.WriteToFile();
     //indexmanager delete
-    im.DeleteIndex(table.tablename,indexname);
+    im.DeleteIndex(table.tablename,att);
 }
 
 //选择（全选）
