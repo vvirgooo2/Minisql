@@ -93,7 +93,7 @@ void API_drop_table(string tablename){
        throw std::runtime_error("Not exist this table");
         //return false;
     }
-    auto &table = cm.GetTable(tablename);
+    auto table = cm.GetTable(tablename);
     //Catalog删除信息
     cm.RemoveTable(table);
     cm.WriteToFile();
@@ -102,7 +102,8 @@ void API_drop_table(string tablename){
     rm->dropTable(tablename);
     //Index删除有关索引
     for(int i=0;i<table.index.size();i++){
-        im.DeleteIndex(table.tablename,table.index[i].second);
+        im.DeleteIndex(table.tablename,table.index[i].first);
+        cout<<table.index[i].second<<" dropped."<<endl;
     }
 }
 
@@ -151,7 +152,7 @@ void API_create_index(string tablename,string indexname,string at_name){
     }
     
     //call record manager to add nodes
-   // rm->CreateIndex(table,table.attri_types[attrFetch]);
+    rm->CreateIndex(table,table.attri_types[attrFetch]);
 }
 
 //删除索引
@@ -163,6 +164,7 @@ void API_drop_index(string indexname){
     }
     auto &table = cm.GetIndex(indexname);
     //catalogshanchu 
+    string att;
     for (auto &idx: table.index) {
         if (idx.second == indexname) {
             //传给index删除索引
@@ -170,12 +172,13 @@ void API_drop_index(string indexname){
                                            [&indexname](const std::pair<std::string, std::string> &item) {
                                                return item.second == indexname;
                                            }));
+            att=idx.first;
             std::cout << "Index " << indexname << " dropped." << std::endl;
         }
     }
     cm.WriteToFile();
     //indexmanager delete
-    im.DeleteIndex(table.tablename,indexname);
+    im.DeleteIndex(table.tablename,att);
 }
 
 //选择（全选）
@@ -236,7 +239,7 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
             if(conditions[i].name==table.index[j].first){
                 indexcon=conditions[i];
                 rm->selectRecord_index(table,attris,conditions,indexcon,true);
-               return;
+                return;
             }
         }
     }

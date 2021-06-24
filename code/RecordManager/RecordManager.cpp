@@ -201,7 +201,7 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
         }
     }
     if(output) print(res);
-    if(output) cout<<rownum<<" selected."<<endl;
+    if(output) cout<<res.row.size()<<" selected."<<endl;
     return res.row.size();
 }
 
