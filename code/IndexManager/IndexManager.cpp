@@ -51,17 +51,25 @@ BTNode<T>* BTNode<T>::Split()
     else {
         for (i = (this->size+1)/2; i < this->size;i++) {
             node->child[node->size] = this->child[i];
-            node->child[node->size++]->parent = node;
+            node->child[node->size]->parent = node;
+            node->size++;
+            this->child[i] = NULL;
+            this->keys[i - 1] = T(NULL);
         }
-        for (i = 0; i < node->size;i++) {
+        for (i = 0; i < node->size - 1;i++) {
             node->keys[i] = node->child[i + 1]->min;
+            node->child[i]->id_in_parent = i;
         }
+        node->child[i]->id_in_parent = i;
         node->min = node->child[0]->min;
     }
     //update of other infos
     this->size = (this->size + 1) / 2;
     node->isleaf = this->isleaf;
     node->parent = this->parent;
+    if (this->nextnode != NULL) {
+        this->nextnode->lastnode = node;
+    }
     node->nextnode = this->nextnode;
     this->nextnode = node;
     node->lastnode = this;
@@ -117,22 +125,24 @@ BTNode<T>* BTNode<T>::Insert(BTNode<T>* node)
         this->min = node->min;
         node->parent = this;
         node->id_in_parent = 0;
+        node->nextnode = node->lastnode = NULL;
         return NULL;
     }
     for (j = this->size - 1; j >= i;j--){
         this->child[j+1] = this->child[j];
-        this->child[j]->id_in_parent = j + 1;
     }
     this->child[i] = node;
     this->size++;
-    node->id_in_parent = i;
     node->parent = this;
+    node->id_in_parent = i;
     //update the keys of the child
     for (i = 0; i < this->size - 1;i++) {
         this->keys[i] = this->child[i + 1]->min;
         this->child[i]->nextnode = this->child[i + 1];
         this->child[i + 1]->lastnode = this->child[i];
+        this->child[i]->id_in_parent = i;
     }
+    this->child[i]->id_in_parent = i;
     //update other infos
     if (node->min < this->min)
         this->min = node->min;
@@ -320,6 +330,7 @@ bool BTNode<T>::Merge(BTNode *b)
             for (i = this->size, j = 0; j < b->size;i++, j++) {
                 this->child[i] = b->child[j];
                 this->child[i]->id_in_parent = i;
+                this->child[i]->parent = this;
             }
             this->size += b->size;
             b->size = 0;
@@ -334,8 +345,9 @@ bool BTNode<T>::Merge(BTNode *b)
             this->child[i]->id_in_parent = i;
             //update of of the parent node
             temp = b->parent;
-            for (i = b->parent->id_in_parent; i < temp->size - 1;i++) {
+            for (i = b->id_in_parent; i < temp->size - 1;i++) {
                 temp->child[i] = temp->child[i + 1];
+                temp->child[i]->id_in_parent = i;
             }
             temp->child[temp->size - 1] = NULL;
             if (temp->size > 1)
@@ -447,7 +459,7 @@ template <typename T>
 bool BTree<T>::DeleteKey(T key)
 {
     int i;
-    BTNode<T> *temp, *parent, *latch;
+    BTNode<T> *temp, *parent, *latch, *next_node;
     temp = this->Find(key);
     //find the right place of key
     for (i = 0; i < temp->size;i++) {
@@ -510,9 +522,10 @@ bool BTree<T>::DeleteKey(T key)
         }
         else if (temp->nextnode != NULL) {
             //don't care about the warning, temp should be initialized by find
-            if (temp->Merge(temp->nextnode)) {
-                parent = temp->nextnode->parent;
-                delete temp->nextnode;
+            next_node = temp->nextnode;
+            if (temp->Merge(next_node)) {
+                parent = next_node->parent;
+                delete next_node;
                 temp = parent;
             }
             //if can't, then the 2 nodes has already been balanced, temp should be legal
@@ -940,13 +953,22 @@ bool IndexManager::Read()
 {
     return true;
 }
+
+//the following code is used to test the B+Tree, the user could comment them if you don't want to use
+/*
+bool compare(int a, int b)
+{
+    return a < b;
+}
+#define MAXN 100000
 int main(void)
 {
-    IndexInfo<int> indexinfo("my test table", 2000, "grade", AType::Integer, 4);
+    IndexInfo<int> indexinfo("my test table", MAXN, "grade", AType::Integer, 4);
     int i;
-    int a[2000];
-    for (i = 2000-1; i >=0;i--) {
-        a[i] = rand();
+    int a[MAXN];
+    for (i = MAXN - 1; i >= 0; i--)
+    {
+        a[i] = rand()*rand();
         indexinfo.AddKey(a[i], i * 4 / 4096, i * 4 % 4096);
     }
     IndexManager IM;
@@ -958,14 +980,35 @@ int main(void)
     vector<string> index_name;
     index_name.push_back("grade");
     vector<sqlvalue> vv;
-    for (i = 2000-1; i >=1001;i--) {
+    for (i = MAXN-1; i >= 1;i--) {
         v.i = a[i];
         vv.push_back(v);
         IM.DeleteKey("my test table", vv);
         vv.pop_back();
     }
-    IM.DeleteKey("my test table", vv);
+    //sort(a, a + MAXN/2+1, compare);
     cout << "hello" << endl;
+    //test the result after the delete
+    BTNode<int> *node;
+    node = IM.TI.front().int_index.front().first;
+    int top = 0;
+    while (node != NULL) {
+        for (i = 0; i < node->size;i++) {
+            if (i % 15 == 0) {
+                cout << endl;
+            }
+            cout << node->keys[i] << ' ';
+        }
+        // for (i = 0; i < node->size;i++) {
+        //     if (i % 15 == 0) {
+        //         cout << endl;
+        //     }
+        //     cout << a[top++] << ' ';
+        // }
+        cout << a[0] << endl;
+        cout << endl;
+        node = node->nextnode;
+    }
     //test for select
     condition c;
     c.name = "grade";
@@ -981,3 +1024,4 @@ int main(void)
 }
 
 
+*/
