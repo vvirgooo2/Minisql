@@ -34,6 +34,16 @@ BufferManage::BufferManage()
     }
 }
 
+void BufferManage::drop_table(string TableName)
+{
+    for(int i = 0; i < MAX_BlockNumber; i++)
+    {
+        if(Buffer_pool[i].TableName == TableName)
+            Buufer_pool[i].BlockId = -1;
+    }
+    return;
+}
+
 
 Block* BufferManage::get_block(string TableName, int BlockId)
 {
