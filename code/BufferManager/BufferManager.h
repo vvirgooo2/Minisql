@@ -35,6 +35,7 @@ public:
     BufferManage();
     // 遍历bufferpool数组，根据表名和blockID搜索非满的块，有则返回块指针，没有则返回null 
     Block* get_block(string TableName, int BlockId);  
+    void drop_table(string TableName);
     
     // 返回处理过的块
     void ret_block(Block* blk);  
