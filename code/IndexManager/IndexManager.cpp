@@ -720,8 +720,8 @@ bool TableIndex::InsertKey(vector<sqlvalue> index_value, const Position& p)
                 for (it_i = int_index.begin(); it_i != int_index.end();it_i++) {
                     if (it_i->attr_name == it_v->type.attri_name) {
                         it_i->Insert(it_v->i, p);
+                        is_find = true; 
                         break;
-                        is_find = true;
                     }
                 }
                 break;

@@ -138,7 +138,7 @@ void API_create_index(string tablename,string indexname,string at_name){
 
     // call managers to create empty bplus tree
     if(table.attri_types[attrFetch].type==AType::String){
-        IndexInfo<string> info(tablename,0,table.attri_types[attrFetch].attri_name,AType::String,table.attri_types[attrFetch].char_sz);
+        IndexInfo<string> info(tablename,0,table.attri_types[attrFetch].attri_name,AType::String,table.attri_types[attrFetch].char_sz+1);
         im.CreateIndex(tablename,info);
     }
     else if(table.attri_types[attrFetch].type==AType::Integer){
@@ -151,7 +151,7 @@ void API_create_index(string tablename,string indexname,string at_name){
     }
     
     //call record manager to add nodes
-    rm->CreateIndex(table,table.attri_types[attrFetch]);
+   // rm->CreateIndex(table,table.attri_types[attrFetch]);
 }
 
 //删除索引
@@ -236,7 +236,7 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
             if(conditions[i].name==table.index[j].first){
                 indexcon=conditions[i];
                 rm->selectRecord_index(table,attris,conditions,indexcon,true);
-                break;
+               return;
             }
         }
     }
@@ -299,7 +299,6 @@ void API_insert(string tablename,vector<sqlvalue> value_list){
     Tuple t;
     t.element=value_list;
     //测试块
-
     rm->insertRecord(table,t);
 }
 

@@ -4,6 +4,7 @@
 #include<fstream>
 #include<iomanip>
 #include<cstdio>
+#define INDEX_DEBUG
 extern BufferManage bm;
 extern IndexManager im;
 //打印结果
@@ -200,6 +201,7 @@ int  RecordManager::selectRecord_index(const Table &table, const vector<string> 
         }
     }
     if(output) print(res);
+    if(output) cout<<rownum<<" selected."<<endl;
     return res.row.size();
 }
 
@@ -277,7 +279,7 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
             }
         }   
     }
-    //im.InsertKey(table.tablename,values,pos);
+    im.InsertKey(table.tablename,values,pos);
     bm.ret_block(B);
     return true;
 }

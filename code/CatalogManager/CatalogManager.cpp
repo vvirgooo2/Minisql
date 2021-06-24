@@ -173,7 +173,6 @@ void CatalogManager::CreateTable(const std::string &TableName,vector<attri_type>
     // Make attribute
     for (const auto &attr: attris) {
         table.attri_names.push_back(attr.attri_name);
-        cout<<attr.attri_name;
     }
     attri_type pri_index;
    // Record index primary
