@@ -95,6 +95,7 @@ class IndexManager
         bool DeleteKey(const string &tablename, vector<sqlvalue> index_value);
         vector<Position> GetPosition(const string &tablename, const condition &c);
         bool Save();
+        //call the read every time program is executed
         bool Read();
 
     private:

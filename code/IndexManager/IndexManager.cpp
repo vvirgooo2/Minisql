@@ -862,7 +862,6 @@ bool IndexManager::CreateIndex(const string &tablename, IndexInfo<int> &indexinf
     }
     else {
         temp = new TableIndex(tablename);
-        cout << "new table is created" << endl;
         bool is_succe = temp->CreateIndex(indexinfo);
         TI.push_back(*temp);
         if (is_succe)
@@ -879,7 +878,6 @@ bool IndexManager::CreateIndex(const string &tablename, IndexInfo<float> &indexi
     }
     else {
         temp = new TableIndex(tablename);
-        cout << "new table is created" << endl;
         bool is_succe = temp->CreateIndex(indexinfo);
         TI.push_back(*temp);
         if (is_succe)
@@ -896,7 +894,6 @@ bool IndexManager::CreateIndex(const string &tablename, IndexInfo<string> &index
     }
     else {
         temp = new TableIndex(tablename);
-        cout << "new table is created" << endl;
         bool is_succe = temp->CreateIndex(indexinfo);
         TI.push_back(*temp);
         if (is_succe)
@@ -970,7 +967,7 @@ bool IndexManager::Save()
         output << it_table->n << ' ' << it_table->i_n << ' ' << it_table->f_n << ' ' << it_table->s_n << endl;
         for (it_i = it_table->int_index.begin(); it_i != it_table->int_index.end();it_i++) {
             output << it_i->attr_name << endl;
-            output << 0 << ' ' << it_i->key_maxsize << ' ' << it_i->n << ' ' << it_i->num_keys << endl;
+            output << 0 << ' ' << it_i->key_maxsize << ' ' << it_i->num_keys << endl;
             BTNode<int> *temp;
             temp = it_i->first;
             while (temp != NULL) {
@@ -982,7 +979,7 @@ bool IndexManager::Save()
         }
         for (it_f = it_table->float_index.begin(); it_f != it_table->float_index.end();it_f++) {
             output << it_f->attr_name << endl;
-            output << 1 << ' ' << it_f->key_maxsize << ' ' << it_f->n << ' ' << it_f->num_keys << endl;
+            output << 1 << ' ' << it_f->key_maxsize << ' ' << it_f->num_keys << endl;
             BTNode<float> *temp;
             temp = it_f->first;
             while (temp != NULL) {
@@ -994,7 +991,7 @@ bool IndexManager::Save()
         }
         for (it_s = it_table->str_index.begin(); it_s != it_table->str_index.end();it_s++) {
             output << it_s->attr_name << endl;
-            output << 2 << ' ' << it_s->key_maxsize << ' ' << it_s->n << ' ' << it_s->num_keys << endl;
+            output << 2 << ' ' << it_s->key_maxsize << ' ' << it_s->num_keys << endl;
             BTNode<string> *temp;
             temp = it_s->first;
             while (temp != NULL) {
@@ -1006,12 +1003,87 @@ bool IndexManager::Save()
             }
         }
     }
+    output.close();
     return true;
 }
 bool IndexManager::Read()
 {
     fstream input;
+    int i, j, k;
+    int t_n, t_i_n, t_f_n, t_s_n, num_table, type, key_maxsize, num_keys;
+    string tablename, attr_name;
+    IndexInfo<int> *int_indexinfo;
+    IndexInfo<float> *float_indexinfo;
+    IndexInfo<string> *str_indexinfo;
+    Position p;
     input.open("index.dat", ios::in | ios::binary);
+    if (!input.is_open()) {
+        cout << "file open error" << endl;
+        return false;
+    }
+    input >> num_table;
+    //for each table
+    for (i = 0; i < num_table;i++) {
+        getline(input, tablename);
+        getline(input, tablename);
+        input >> t_n >> t_i_n >> t_f_n >> t_s_n;
+        //for each integer index in the table
+        {
+            int key;
+            for (j = 0; j < t_i_n;j++) {
+                getline(input, attr_name);
+                getline(input, attr_name);
+                input >> type >> key_maxsize >> num_keys;
+                int_indexinfo = new IndexInfo<int>(tablename, num_keys, attr_name, AType::Integer, key_maxsize);
+                if (type != 0)
+                    throw runtime_error("Read Error");
+                for (k = 0; k < num_keys;k++) {
+                    input >> key >> p.blockID >> p.offset;
+                    int_indexinfo->AddKey(key, p.blockID, p.offset);
+                }
+                this->CreateIndex(tablename, *int_indexinfo);
+                delete int_indexinfo;
+            }
+        }
+        //for each float index in the table
+        {
+            float key;
+            for (j = 0; j < t_f_n;j++) {
+                getline(input, attr_name);
+                getline(input, attr_name);
+                input >> type >> key_maxsize >> num_keys;
+                float_indexinfo = new IndexInfo<float>(tablename, num_keys, attr_name, AType::Float, key_maxsize);
+                if (type != 1)
+                    throw runtime_error("Read Error");
+                for (k = 0; k < num_keys;k++) {
+                    input >> key >> p.blockID >> p.offset;
+                    float_indexinfo->AddKey(key, p.blockID, p.offset);
+                }
+                this->CreateIndex(tablename, *float_indexinfo);
+                delete float_indexinfo;
+            }
+        }
+        //for each string index in the table
+        {
+            string key;
+            for (j = 0; j < t_s_n;j++) {
+                getline(input, attr_name);
+                getline(input, attr_name);
+                input >> type >> key_maxsize >> num_keys;
+                str_indexinfo = new IndexInfo<string>(tablename, num_keys, attr_name, AType::String, key_maxsize);
+                if (type != 2)
+                    throw runtime_error("Read Error");
+                for (k = 0; k < num_keys;k++) {
+                    getline(input, key);
+                    getline(input, key);
+                    input >> p.blockID >> p.offset;
+                    str_indexinfo->AddKey(key, p.blockID, p.offset);
+                }
+                this->CreateIndex(tablename, *str_indexinfo);
+                delete str_indexinfo;
+            }
+        }
+    }
     return true;
 }
 
@@ -1023,35 +1095,36 @@ bool compare(T a, T b)
     return a < b;
 }
 #define MAXN 100000
-int a[MAXN];
+string a[MAXN];
 int main(void)
 {
-    IndexInfo<int> indexinfo("my test table", MAXN, "grade", AType::Integer, 4);
+    IndexInfo<string> indexinfo("my test table", MAXN, "grade", AType::String, 32);
     int i;
     for (i = MAXN - 1; i >= 0; i--)
     {
-        a[i] = rand();
+        a[i] = "hello world";
         indexinfo.AddKey(a[i], i * 4 / 4096, i * 4 % 4096);
     }
     IndexManager IM;
-    IM.CreateIndex(indexinfo.tablename, indexinfo);
-    //test for deleting
-    sqlvalue v;
-    v.type.type = AType::Integer;
-    v.type.attri_name = "grade";
-    vector<sqlvalue> vv;
-    for (i = MAXN-1; i >= MAXN/2+1;i--) {
-        v.i = a[i];
-        vv.push_back(v);
-        IM.DeleteKey("my test table", vv);
-        vv.pop_back();
-    }
-    sort(a, a + MAXN/2+1, compare<int>);
-    cout << "hello" << endl;
-    //test the result after the delete
-    BTNode<int> *node;
-    node = IM.TI.front().int_index.front().first;
-    int top = 0;
+    IM.Read();
+    //IM.CreateIndex(indexinfo.tablename, indexinfo);
+    // //test for deleting
+    // sqlvalue v;
+    // v.type.type = AType::Integer;
+    // v.type.attri_name = "grade";
+    // vector<sqlvalue> vv;
+    // for (i = MAXN-1; i >= MAXN/2+1;i--) {
+    //     v.i = a[i];
+    //     vv.push_back(v);
+    //     IM.DeleteKey("my test table", vv);
+    //     vv.pop_back();
+    // }
+    // sort(a, a + MAXN/2+1, compare<int>);
+    // cout << "hello" << endl;
+    // //test the result after the delete
+    // BTNode<int> *node;
+    // node = IM.TI.front().int_index.front().first;
+    // int top = 0;
     // while (node != NULL) {
     //     for (i = 0; i < node->size;i++) {
     //         if (i % 15 == 0) {
@@ -1070,18 +1143,20 @@ int main(void)
     //     node = node->nextnode;
     // }
     //test for select
-    condition c;
-    c.name = "grade";
-    c.op = 3; //>=1000
-    c.val.i = 1000;
-    c.val.type.type = AType::Integer;
-    vector<Position> p;
-    p = IM.GetPosition("my test table", c);
-    cout << "hello" << endl;
-    IM.DeleteIndex("my test table", "grade");
-    cout << "hello" << endl;
+    // condition c;
+    // c.name = "grade";
+    // c.op = 3; //>=1000
+    // c.val.i = 1000;
+    // c.val.type.type = AType::Integer;
+    // vector<Position> p;
+    // p = IM.GetPosition("my test table", c);
+    // cout << "hello" << endl;
+    //IM.DeleteIndex("my test table", "grade");
+    //cout << "Index Deleted" << endl;
+
     IM.Save();
-    IM.Read();
+
     return 0;
 }
+
 */
