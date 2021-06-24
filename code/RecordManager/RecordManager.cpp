@@ -332,7 +332,7 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
 }
 
 //创建索引
-bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr, const string indexname){
+bool RecordManager::CreateIndex(const Table &table, const attri_type indexattr){
     //bool InsertKey(const string &tablename, vector<string> index_name, 
     //vector<sqlvalue> v, const Position& p);
     int attrpos;

@@ -186,10 +186,16 @@ void CatalogManager::CreateTable(const std::string &TableName,vector<attri_type>
     tables.push_back(table);
     //创建主键索引
     if(pri_index.type==AType::String){
-        IndexInfo<string> info;
-        info.capacity=0;
-        info.key_maxsize=pri_index.char_sz;s
-        info.type=AType::String;
+        IndexInfo<string> info(TableName,0,pri_index.attri_name,AType::String,pri_index.char_sz);
+        im.CreateIndex(TableName,info);
+    }
+    else if(pri_index.type==AType::Integer){
+        IndexInfo<int> info(TableName,0,pri_index.attri_name,AType::Integer,sizeof(int));
+        im.CreateIndex(TableName,info);
+    }
+    else if(pri_index.type==AType::Float){
+        IndexInfo<float> info(TableName,0,pri_index.attri_name,AType::Float,sizeof(float));
+        im.CreateIndex(TableName,info);
     }
 
 }

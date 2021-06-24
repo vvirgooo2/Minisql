@@ -32,7 +32,7 @@ public:
     //删除记录
     bool deleteRecord(const Table &table, const vector<condition> conditions);
     //创建索引
-    bool CreateIndex(const Table &table, const attri_type indexattr,const string indexname);
+    bool CreateIndex(const Table &table, const attri_type indexattr);
 };
 
 

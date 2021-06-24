@@ -77,10 +77,10 @@ void API_create_table(string tablename,vector<attri_type>attris){
     if(primaryflag==0) throw std::runtime_error("No primary key");
     else if(primaryflag>1) throw std::runtime_error("More than one primary key");
     //传给Catalog建表
-    cout<<attris[1].char_sz<<endl;
+    //cout<<attris[1].char_sz<<endl;
     cm.CreateTable(tablename, attris);
     cm.WriteToFile();
-    //传给Index建主键索引
+    //传给Index建主键索引，在创建表的时候完成初始化一个空的b+tree
     
 }
 
@@ -102,9 +102,8 @@ void API_drop_table(string tablename){
     rm->dropTable(tablename);
     //Index删除有关索引
     for(int i=0;i<table.index.size();i++){
-        DeleteIndex(tablename, table.index[i].second);
+        im.DeleteIndex(table.tablename,table.index[i].second);
     }
-
 }
 
 //创建索引：
@@ -113,65 +112,46 @@ void API_drop_table(string tablename){
 void API_create_index(string tablename,string indexname,string at_name){
     // check if table exists
     if (!cm.ExistTable(tablename)) {
-        std::cerr << "Table" << tablename << " not found!" << std::endl;
-        // return false;
+        throw std::runtime_error("Table not exist.");
     }
-
-    // check if index not exists
-    if (cm.ExistIndex(indexname)) {
-        std::cerr << "Index name" << indexname << " exists!" << std::endl;
-        // return false;
-    }
-
-
     auto &table = cm.GetTable(tablename);
+    int attrFetch=-1;
+    for(int i=0;i<table.attri_names.size();i++){
+        if(at_name==table.attri_names[i]){
+            attrFetch=i;
+            if(table.attri_types[i].primary) throw std::runtime_error("This primary key has auto Index");
+            else if(!table.attri_types[i].unique) throw std::runtime_error("Can't create index on a key not unique");
+        }
+    }
+    if(attrFetch==-1) throw std::runtime_error("Attribute not exists in this table");
 
     // check if there already has an index
     for (auto &index: table.index) {
         if (index.first == at_name) {
-            // auto gen, not error
-            if (index.second.find("autoIndex_") == 0) {
-                index.second = indexname;
-                std::cout << "Create index " << indexname << " success" << std::endl;
-                //return true;
-            }
-            // manually gen index, error
-            std::cerr << "Index on the attribute " << at_name << " exists!" << std::endl;
-            // return false;
+            throw std::runtime_error("This attribute already has a index");
         }
     }
 
-    // find and check attr
-    attri_type type;
-    for (int i = 0; i < table.attri_names.size(); ++i) {
-        if (table.attri_names[i] == at_name) {
-            if (table.attri_types[i].unique) {
-                type = table.attri_types[i];
-                type.attri_name = table.attri_names[i];
-                break;
-            } else { // only unique attr can have index
-                std::cout << "Not a unique attribute!!" << std::endl;
-                // return false;
-            }
-        }
+    //record a the catalog
+    table.index.emplace_back(std::make_pair(at_name,indexname));
+    cm.WriteToFile();
+
+    // call managers to create empty bplus tree
+    if(table.attri_types[attrFetch].type==AType::String){
+        IndexInfo<string> info(tablename,0,table.attri_types[attrFetch].attri_name,AType::String,table.attri_types[attrFetch].char_sz);
+        im.CreateIndex(tablename,info);
     }
-
-
-    // call managers to create index
-
-
-    // auto res = rm->CreateIndex(table, type);
-    /*
-    table.index.emplace_back(at_name, indexname);
-    cm->WriteToFile();
-    if (res) {
-        std::cout << "Create index success" << std::endl;
-        // return true;
-    } else {
-        std::cerr << "Unknown failure!" << std::endl;
-        // return false;
+    else if(table.attri_types[attrFetch].type==AType::Integer){
+        IndexInfo<int> info(tablename,0,table.attri_types[attrFetch].attri_name,AType::Integer,sizeof(int));
+        im.CreateIndex(tablename,info);
     }
-    */
+    else if(table.attri_types[attrFetch].type==AType::Float){
+        IndexInfo<float> info(tablename,0,table.attri_types[attrFetch].attri_name,AType::Float,sizeof(float));
+        im.CreateIndex(tablename,info);
+    }
+    
+    //call record manager to add nodes
+    rm->CreateIndex(table,table.attri_types[attrFetch]);
 }
 
 //删除索引
@@ -179,25 +159,24 @@ void API_create_index(string tablename,string indexname,string at_name){
 void API_drop_index(string indexname){
     bool index = cm.ExistIndex(indexname);
     if(!index){
-        std::cerr << "Index not found!" << std::endl;
-        // return
+        throw std::runtime_error("Index not exists");
     }
     auto &table = cm.GetIndex(indexname);
-
-   for (auto &idx: table.index) {
+    //catalogshanchu 
+    for (auto &idx: table.index) {
         if (idx.second == indexname) {
             //传给index删除索引
-
             table.index.erase(std::find_if(table.index.begin(), table.index.end(),
                                            [&indexname](const std::pair<std::string, std::string> &item) {
                                                return item.second == indexname;
                                            }));
             std::cout << "Index " << indexname << " dropped." << std::endl;
-            cm.WriteToFile();
         }
     }
+    cm.WriteToFile();
+    //indexmanager delete
+    im.DeleteIndex(table.tablename,indexname);
 }
-
 
 //选择（全选）
 //判断表名，判断条件是否合理
