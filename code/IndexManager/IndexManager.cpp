@@ -1,20 +1,4 @@
 #include"IndexManager.h"
-
-bool clearkey(int &key)
-{
-    key = 0;
-    return true;
-}
-bool clearkey(float &key)
-{
-    key = 0;
-    return true;
-}
-bool clearkey(string &key)
-{
-    key.clear();
-    return true;
-}
 //BNode
 template <typename T>
 BTNode<T>::BTNode(int n)
@@ -615,14 +599,20 @@ vector<Position> BTree<T>::GetPosition(T val, int op)
         temp = first;
         //find the position of the first key that bigger or equal to the condition
         while (temp != NULL) {
+            bool is_break = false;
             for (i = 0; i < temp->size;i++) {
                 if (val <= temp->keys[i]) {
+                    is_break = true;
                     break;
                 }
                 pv.push_back(temp->p[i]);
             }
+            if (is_break)
+                break;
             temp = temp->nextnode;
         }
+        if (temp == NULL)
+            return pv;
         switch(op) {
             case 1:// <>
                 for (i++; i < temp->size;i++) {
@@ -848,11 +838,9 @@ vector<Position> TableIndex::GetPosition(const condition& c)
 IndexManager::IndexManager()
 :n(0)
 {
-    Read();
 }
 IndexManager::~IndexManager()
 {
-    Save();
     TI.clear();
     TI.resize(0);
 }
@@ -1113,30 +1101,30 @@ bool compare(T a, T b)
     return a < b;
 }
 #define MAXN 100000
-string a[MAXN];
+int a[MAXN];
 int main(void)
 {
-    IndexInfo<string> indexinfo("my test table", MAXN, "grade", AType::String, 32);
+    IndexInfo<int> indexinfo("my test table", MAXN, "grade", AType::Integer, 4);
     int i;
     for (i = MAXN - 1; i >= 0; i--)
     {
-        a[i] = "hello world";
+        a[i] = rand();
         indexinfo.AddKey(a[i], i * 4 / 4096, i * 4 % 4096);
     }
     IndexManager IM;
-    IM.Read();
-    //IM.CreateIndex(indexinfo.tablename, indexinfo);
+    //IM.Read();
+    IM.CreateIndex(indexinfo.tablename, indexinfo);
     // //test for deleting
-    // sqlvalue v;
-    // v.type.type = AType::Integer;
-    // v.type.attri_name = "grade";
-    // vector<sqlvalue> vv;
-    // for (i = MAXN-1; i >= MAXN/2+1;i--) {
-    //     v.i = a[i];
-    //     vv.push_back(v);
-    //     IM.DeleteKey("my test table", vv);
-    //     vv.pop_back();
-    // }
+    sqlvalue v;
+    v.type.type = AType::Integer;
+    v.type.attri_name = "grade";
+    vector<sqlvalue> vv;
+    for (i = MAXN-1; i >= MAXN/2+1;i--) {
+        v.i = a[i];
+        vv.push_back(v);
+        IM.DeleteKey("my test table", vv);
+        vv.pop_back();
+    }
     // sort(a, a + MAXN/2+1, compare<int>);
     // cout << "hello" << endl;
     // //test the result after the delete
@@ -1161,14 +1149,14 @@ int main(void)
     //     node = node->nextnode;
     // }
     //test for select
-    // condition c;
-    // c.name = "grade";
-    // c.op = 3; //>=1000
-    // c.val.i = 1000;
-    // c.val.type.type = AType::Integer;
-    // vector<Position> p;
-    // p = IM.GetPosition("my test table", c);
-    // cout << "hello" << endl;
+    condition c;
+    c.name = "grade";
+    c.op = 1; //>=1000
+    c.val.i = 1000;
+    c.val.type.type = AType::Integer;
+    vector<Position> p;
+    p = IM.GetPosition("my test table", c);
+    cout << "hello" << endl;
     //IM.DeleteIndex("my test table", "grade");
     //cout << "Index Deleted" << endl;
 
@@ -1176,5 +1164,4 @@ int main(void)
 
     return 0;
 }
-
 */
