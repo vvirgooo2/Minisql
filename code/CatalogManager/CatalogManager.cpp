@@ -174,29 +174,33 @@ void CatalogManager::CreateTable(const std::string &TableName,vector<attri_type>
     for (const auto &attr: attris) {
         table.attri_names.push_back(attr.attri_name);
     }
-    attri_type pri_index;
-   // Record index primary
-   for (auto &type: table.attri_types) {
-       if (type.primary) {
-           table.index.emplace_back(std::make_pair(type.attri_name, std::string("autoIndex_") + (autoIndex++)));
-           pri_index=type;
-       }
-   }
-    tables.push_back(table);
-    //创建主键索引
-    if(pri_index.type==AType::String){
-        IndexInfo<string> info(TableName,0,pri_index.attri_name,AType::String,pri_index.char_sz);
-        im.CreateIndex(TableName,info);
-    }
-    else if(pri_index.type==AType::Integer){
-        IndexInfo<int> info(TableName,0,pri_index.attri_name,AType::Integer,sizeof(int));
-        im.CreateIndex(TableName,info);
-    }
-    else if(pri_index.type==AType::Float){
-        IndexInfo<float> info(TableName,0,pri_index.attri_name,AType::Float,sizeof(float));
-        im.CreateIndex(TableName,info);
+    
+    for(int i = 0; i < table.attri_count;i++){
+        // Record index primary
+        if (table.attri_types[i].primary||table.attri_types[i].unique) {
+            table.index.emplace_back(std::make_pair(table.attri_types[i].attri_name, std::string("autoIndex_") + (autoIndex++)));
+        }
     }
 
+    tables.push_back(table);
+    for(int i=0;i<table.attri_names.size();i++){
+        if(!table.attri_types[i].primary&&!table.attri_types[i].unique) continue;
+        attri_type pri_index=table.attri_types[i];
+        //创建主键索引
+        if(pri_index.type==AType::String){
+            IndexInfo<string> info(TableName,0,pri_index.attri_name,AType::String,pri_index.char_sz);
+            im.CreateIndex(TableName,info);
+        }
+        else if(pri_index.type==AType::Integer){
+            IndexInfo<int> info(TableName,0,pri_index.attri_name,AType::Integer,sizeof(int));
+            im.CreateIndex(TableName,info);
+        }
+        else if(pri_index.type==AType::Float){
+            IndexInfo<float> info(TableName,0,pri_index.attri_name,AType::Float,sizeof(float));
+            im.CreateIndex(TableName,info);
+        }
+    }
+    
 }
 
 /**
