@@ -525,8 +525,7 @@ void Parser::Delete(vector<string> args){
 }
 
 void Parser::Execfile(vector<string> args){
-    
-    if(args.size()>2) { cout<<"syntax error!"<<endl; return;}
+    if(args.size()>2) { throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (execfile)");}
     Parser parser;
     parser.outtime = false;
     string ins;
