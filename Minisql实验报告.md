@@ -146,7 +146,7 @@ SQL脚本文件中可以包含任意多条上述8种SQL语句，MiniSQL系统读
 
 整个数据库的结构参照了实验指导部分，主体分为四个部分，分别是`RecordManager`, `BufferManager`, `IndexManager`和 `CatalogManager`. 
 
-![image-20210628031808846](/home/xenia/GIT/minisql/报告图片/整体模式图.png)
+![image-20210628031808846](./报告图片/整体模式图.png)
 
 
 
@@ -154,7 +154,9 @@ SQL脚本文件中可以包含任意多条上述8种SQL语句，MiniSQL系统读
 
 ### 3. 流程图
 
-以一条`insert`语句为例，下面是其经过的模块及相关处理：![image-20210628030135371](/home/xenia/GIT/minisql/报告图片/流程图.png)
+以一条`insert`语句为例，下面是其经过的模块及相关处理：
+
+![image-20210628030135371](./报告图片/流程图.png)
 
 
 
