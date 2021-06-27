@@ -514,7 +514,7 @@ void Parser::Delete(vector<string> args){
         conditions.push_back(con);
         if(i==(int)args.size()-1) break;
         else if(args.at(i+1)=="and") i+=2;
-        else break;
+        else throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");
     }
 #ifdef DEBUG
     auto itr=conditions.begin();
