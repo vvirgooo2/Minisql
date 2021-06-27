@@ -3,7 +3,7 @@
 #include"interpreter/interpreter.h"
 #include"SqlDataType.h"
 int main(){
-    printf("Welcome to our minisql!\nUse help to get the information\n");
+    printf("Welcome to our minisql!\n");
     interpreter inter;
     inter.Loop();
 }
