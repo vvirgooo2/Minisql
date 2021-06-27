@@ -402,6 +402,97 @@ print函数能够将一个Tuple中的复杂类型转化为字符串以一定的�
 
 ### 4.CatalogManager
 
+#### 4.1 功能描述
+Catalog Manager 负责管理数据库的所有模式信息，即数据库中所有表的定义信息，包括表的名称、表中字段（列）数、主键、表上的索引、表中字段的定义信息、数据库中所有索引的定义，包括所属表、索引建⽴在那个字段上等。还提供访问及操作上述信息的接⼝，供 Interpreter 和 API 模块使⽤。
+
+#### 4.2 数据结构
+Catalog Manager主要是储存表的定义信息，因此此处最重要的数据结构就是Table的定义。
+
+```c++
+class Table{
+public:
+    string tablename;
+    vector<string> attri_names;        //各列的名字
+    vector<attri_type> attri_types;    //各列属性
+    vector<pair<string,string>> index; //属性名-索引名
+    int attri_count;                   //属性个数
+    int row_num;                       //记录条数
+};
+```
+
+```c++
+class CatalogManager {
+public:
+    CatalogManager();
+
+    ~CatalogManager();
+
+    void CreateTable(const std::string &TableName,const vector<attri_type>attris);	//创建表
+
+    bool ExistTable(const std::string &table) const;	//检测表存在
+
+    Table &GetTable(const std::string &table);	//获得表
+
+    bool ExistIndex(const std::string &IndexName) const;	//检测索引
+
+    Table &GetIndex(const std::string &IndexName);	//获得索引
+
+    bool RemoveTable(const Table &_table);	//删除表
+
+    void WriteToFile() const;	//写⽂件
+
+private:
+    void LoadFromFile();	//读⽂件
+
+    std::vector<Table> tables;	//表定义的元数据
+
+    static constexpr auto metaFileName = "tables.meta";
+};
+```
+
+#### 4.3 实现逻辑
+Catalog Manager在整个过程中主要会产⽣ tables.meta 、tablename.catalog 等DB Files，它们全部是⽂本⽂件。
+  ​	Meta⽂件:tables.meta ⽂件中储存了全部的表名称。其中第⼀⾏保存了数据库中所有表的数量总和，下⾯的每⼀⾏是⼀个表名，并为了规避不同系统下换⾏产⽣的问题，使⽤了0作为不同表名称的分隔符。
+  
+  ​	Catalog⽂件:Catalog ⽂件记录了每⼀张表的定义，他的构成是1+7N⾏，其中第⼀⾏储存了表的属性个数N。后⾯跟着的7N⾏，储存了N个属性的定义，每个属性占7⾏。第⼀⾏储存了属性的名称，第⼆⾏给出属性的类型，第三⾏给出属性的⼤⼩，其中char类型标记最⼤⼤⼩，⽽int和float类型直接记0，后⾯跟着3⾏0、1，分别代表该属性是否为主键、是否唯⼀、以及是否包含索引。最后⼀⾏给出该属性上的索引名称，如果没有就写 - 。
+  
+CatalogManager中的LoadFromFile和WriteToFile分別是對DB文件的读和写；
+
+  LoadFromFile把首先判定DB文件table.mata中是否存在對應表名metaFileNameh,再從文件table.catalog中把定義讀取給table.
+  
+  WriteToFile把當前table的內容輸出.把表名tablename寫進DB文件table.mata,把定義table寫進DB文件table.catalog.
+  
+操作函数：
+
+```c++
+    void CreateTable(const std::string &TableName,const vector<attri_type>attris);
+    
+    bool ExistTable(const std::string &table) const;
+
+    Table &GetTable(const std::string &table);
+
+    bool ExistIndex(const std::string &IndexName) const;
+
+    Table &GetIndex(const std::string &IndexName);
+
+    bool RemoveTable(const Table &_table);
+```
+
+  他们分别是:
+  
+  ​	创建表:检查各个value是否符合表定义並插⼊,调⽤IndexManager建立索引。
+  
+  ​	检测表存在:判斷該表是否已存在。
+  
+  ​	获得表:找到並返回表的引用。
+  
+  ​	检测索引:判斷該索引是否已存在。
+  
+  ​	获得索引:找到並返回包含該索引的表。
+  
+  ​	删除表:判斷該表是否存在,若存在便删除这张表在内存中的定义，并删除相关的⽂件。
+
+
 ### 5. IndexManager
 
 #### 5.1 功能描述
@@ -699,4 +790,6 @@ and连接
 
 
 ## Chapter 5 - 总结
+
+
 
