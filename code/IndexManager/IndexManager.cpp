@@ -993,7 +993,7 @@ bool IndexManager::Save()
     int i;
     output.open("index.dat", ios::out | ios::binary);
     //output the number of tables that has index
-    output << TI.size() << endl;
+    output << this->n << endl;
     //for each table
     for (it_table = TI.begin(); it_table != TI.end();it_table++) {
         output << it_table->tablename << endl;
