@@ -1,5 +1,21 @@
 #include"IndexManager.h"
 //BNode
+
+bool clearkey(int &key)
+{
+    key = 0;
+    return true;
+}
+bool clearkey(float &key)
+{
+    key = 0;
+    return true;
+}
+bool clearkey(string &key)
+{
+    key.clear();
+    return true;
+}
 template <typename T>
 BTNode<T>::BTNode(int n)
 :n(n), size(0), isleaf(false), lastnode(NULL), nextnode(NULL), parent(NULL), id_in_parent(0)
@@ -840,9 +856,11 @@ vector<Position> TableIndex::GetPosition(const condition& c)
 IndexManager::IndexManager()
 :n(0)
 {
+    Read();
 }
 IndexManager::~IndexManager()
 {
+    Save();
     TI.clear();
     TI.resize(0);
 }

@@ -184,17 +184,17 @@ void API_drop_index(string indexname){
 //选择（全选）
 //判断表名，判断条件是否合理
 //传给record
-void API_select(string tablename, vector<condition> conditions){
+void API_select(string tablename, vector<condition> conditions,int stype){
     if(!cm.ExistTable(tablename)) throw std::runtime_error("No such table!");
     Table table=cm.GetTable(tablename);
     vector<string> attris=table.attri_names;
-    API_selectpart(attris,tablename,conditions);
+    API_selectpart(attris,tablename,conditions,stype);
 }
 
 //选择（部分）
 //判断属性名，条件的合理性
 //注意属性名参数只有name成员被赋值了
-void API_selectpart(vector<string> attris, string tablename, vector<condition> conditions){
+void API_selectpart(vector<string> attris, string tablename, vector<condition> conditions,int stype){
     if(!cm.ExistTable(tablename)) throw std::runtime_error("No such table!");
     auto table=cm.GetTable(tablename);
     //check the table
@@ -232,18 +232,23 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
         if(!attrFetch) throw std::runtime_error("SYNTAX ERROR: Unknown attributes in conditions!");
         attrFetch=false;
     }
-    //检查能否利用索引,查到的第一个
-    condition indexcon;
-    for(int i=0;i<conditions.size();i++){
-        for(int j=0;j<table.index.size();j++){
-            if(conditions[i].name==table.index[j].first){
-                indexcon=conditions[i];
-                rm->selectRecord_index(table,attris,conditions,indexcon,true);
-                return;
+    if(stype==0){
+        //检查能否利用索引,查到的第一个
+        condition indexcon;
+        for(int i=0;i<conditions.size();i++){
+            for(int j=0;j<table.index.size();j++){
+                if(conditions[i].name==table.index[j].first){
+                    indexcon=conditions[i];
+                    rm->selectRecord_index(table,attris,conditions,indexcon,true);
+                    return;
+                }
             }
         }
+        rm->selectRecord(table,attris,conditions,true);
     }
-    rm->selectRecord(table,attris,conditions,true);
+    else{
+        rm->selectRecord_or(table,attris,conditions,true);
+    }
 }
 
 

@@ -15,6 +15,7 @@ public:
     void print(const Result &res) const;   
     //检查元组是否符合条件
     bool validCheck(const vector<condition> conditions, const Tuple tu);
+    bool orvalidCheck(const vector<condition> conditions, const Tuple tu);
     //给定块和offset，把一个tuple读出来
     void readTuple(const char *blockBuffer,int offset, const vector<attri_type> &attris, Tuple&tu);
     
@@ -25,6 +26,7 @@ public:
     bool dropTable(const string tablename);
     //查找记录,返回条数,无索引
     int  selectRecord(const Table &table, const vector<string> &attr, const vector<condition> conditions,bool output=false);
+    int  selectRecord_or(const Table &table, const vector<string> &attr, const vector<condition> conditions,bool output=false);
     //查找记录，返回条数，有索引
     int  selectRecord_index(const Table &table, const vector<string> &attr, const vector<condition> conditions,const condition indexcon,bool output=false);
     //插入记录

@@ -68,6 +68,55 @@ bool RecordManager::validCheck(const vector<condition> conditions, const Tuple t
     return true;
 }
     
+//检查元组是否符合条件
+bool RecordManager::orvalidCheck(const vector<condition> conditions, const Tuple tu)
+{
+    int pos;
+    for(condition con: conditions){
+        pos=-1;
+        //找到条件对应的属性是第几列
+        for(size_t i=0;i<tu.element.size();i++){
+            if(con.name==tu.element[i].type.attri_name){
+                pos=i;
+            }
+        }
+        //核对属性，按理来说API中应该已经核对过了
+        if(pos==-1) return false;
+        if(con.val.type.type!=tu.element[pos].type.type) return false;
+        
+        //核对条件是否成立
+        switch(con.op){
+            case 0:{
+                if(con.val==tu.element[pos]) return true;
+                break;
+            }
+            case 1:{
+                if(con.val==tu.element[pos]) return true;
+                break;
+            }
+            case 2:{
+                if(con.val>=tu.element[pos]) return true;
+                break;
+            }
+            case 3:{
+                if(con.val>tu.element[pos]) return true;
+                break;
+            }
+            case 4:{
+                if(con.val<=tu.element[pos]) return true;
+                break;
+            }
+            case 5:{
+                if(con.val<tu.element[pos]) return true;
+                break;
+            }
+            default: return false;
+        }
+
+    }
+    return false;
+}
+
 //从内存中读取元组，给定block和offset
 void RecordManager::readTuple(const char *blockBuffer,int offset, const vector<attri_type> &attris, Tuple&tu)
 {
@@ -147,6 +196,64 @@ int  RecordManager::selectRecord(const Table &table, const vector<string> &attr,
             if(block[i*length]!=1) continue;
             readTuple(block,i*length,table.attri_types,t);
             if(validCheck(conditions,t)){
+                r=t.fetchRow(table.attri_names,attr);
+                res.row.push_back(r);
+            }
+        }
+        if(output) print(res);
+        rownum+=res.row.size();
+        blockID++;
+        if(blockID>total) break;
+        B=bm.get_block(table.tablename,blockID);  
+        block=B->data_begin;
+    }
+    if(output) cout<<rownum<<" selected."<<endl;
+    return rownum;
+    }
+    catch(std::runtime_error &error){
+        cout << "[Error] " << error.what() << endl;
+    }
+}
+
+//查找记录,返回条数,无须辅助
+//可能每个块头的偏移要计算一下
+int  RecordManager::selectRecord_or(const Table &table, const vector<string> &attr, const vector<condition> conditions,bool output)
+{   try{
+    int length = 1;
+    //计算每条记录的length
+    for(auto itr= table.attri_types.begin(); itr!= table.attri_types.end();itr++){
+        if(itr->type==AType::String) length+=itr->char_sz+1;
+        else if(itr->type==AType::Integer) length+=sizeof(int);
+        else if(itr->type==AType::Float)   length+=sizeof(float);
+    }
+    int rcdPerBlock = (4096-BLOCK_HEADER_SIZE)/length;
+    int blockID=0;
+    int total=get_total_block_num(table.tablename);
+    Block *B=bm.get_block(table.tablename,blockID);
+    char* block=B->data_begin;
+
+    //output attris
+    if(output){
+        cout<<" | ";
+        for(auto itr=attr.begin(); itr!= attr.end();itr++){
+            cout<<setw(10)<<*itr<<" | ";
+        }
+        cout<<endl;
+    }
+
+    Tuple t;
+    int rownum = 0;
+    Row r;
+    
+        
+        
+    //搜索所有条目
+    while(block){
+        Result res;
+        for(int i=0;i<rcdPerBlock;i++){
+            if(block[i*length]!=1) continue;
+            readTuple(block,i*length,table.attri_types,t);
+            if(orvalidCheck(conditions,t)){
                 r=t.fetchRow(table.attri_names,attr);
                 res.row.push_back(r);
             }

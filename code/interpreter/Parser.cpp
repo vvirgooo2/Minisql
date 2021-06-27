@@ -244,6 +244,7 @@ void Parser::Drop_index(vector<string> args){
 void Parser::Select(vector<string> args){
     //select * from tablename where a<>'sda' and b<='ads' and c>=12 and d=12.4;
     // 0     1   2    3        4    
+    int stype=0;
     try{
     string tablename=args.at(3);
     int i=4;
@@ -251,7 +252,7 @@ void Parser::Select(vector<string> args){
     //没有条件
     if(args.size()==4){
         auto start_time = std::chrono::high_resolution_clock::now();
-        API_select(tablename,conditions);
+        API_select(tablename,conditions,stype);
         auto finish_time = std::chrono::high_resolution_clock::now();
         long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
@@ -293,6 +294,10 @@ void Parser::Select(vector<string> args){
         conditions.push_back(con);
         if(i==(int)args.size()-1) break;
         else if(args.at(i+1)=="and") i+=2;
+        else if(args.at(i+1)=="or"){
+            stype=1;
+            i+=2;
+        }
         else break;
     }
 #ifdef DEBUG
@@ -304,7 +309,7 @@ void Parser::Select(vector<string> args){
     }
 #endif
     auto start_time = std::chrono::high_resolution_clock::now();
-    API_select(tablename,conditions);
+    API_select(tablename,conditions,stype);
     auto finish_time = std::chrono::high_resolution_clock::now();
     long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
@@ -318,6 +323,7 @@ void Parser::Select(vector<string> args){
 void Parser::Selectpart(vector<string> args){
     //select a1 a2 from tablename where a<>'sda' and b<='ads' and c>=12 and d=12.4;
     // 0     1   2    3        4    5
+    int stype=0;
     try{
     int i=1;
     vector<string> s_attris;
@@ -331,7 +337,7 @@ void Parser::Selectpart(vector<string> args){
     
     if(args.size()==i+1){
         auto start_time = std::chrono::high_resolution_clock::now();
-        API_selectpart(s_attris,tablename,conditions);
+        API_selectpart(s_attris,tablename,conditions,stype);
         auto finish_time = std::chrono::high_resolution_clock::now();
         long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
         if (tempTime == 0) tempTime = 10;
@@ -355,7 +361,7 @@ void Parser::Selectpart(vector<string> args){
         i++;
         //sqlvalue
         string value=args.at(i);
-        if(value.at(0)=='\''&&value.at(value.length()-1)=='\''){
+        if(value.at(0)=='\''||value.at(0)=='\"'&&value.at(value.length()-1)=='\''||value.at(value.length()-1)=='\"'){
             con.val.type.type=AType::String;
             con.val.type.attri_name=con.name;
             con.val.str=value.substr(1,value.length()-2);
@@ -373,6 +379,10 @@ void Parser::Selectpart(vector<string> args){
         conditions.push_back(con);
         if(i==(int)args.size()-1) break;
         else if(args.at(i+1)=="and") i+=2;
+        else if(args.at(i+1)=="or") {
+            stype=1;
+            i+=2;
+        }
         else break;
     }
 #ifdef DEBUG
@@ -390,7 +400,7 @@ void Parser::Selectpart(vector<string> args){
     }
 #endif
     auto start_time = std::chrono::high_resolution_clock::now();
-    API_selectpart(s_attris, tablename,conditions);
+    API_selectpart(s_attris, tablename,conditions,stype);
     auto finish_time = std::chrono::high_resolution_clock::now();
     long long int tempTime = std::chrono::duration_cast<std::chrono::nanoseconds>(finish_time - start_time).count();
     if (tempTime == 0) tempTime = 10;
@@ -454,6 +464,7 @@ void Parser::Insert(vector<string> args){
 void Parser::Delete(vector<string> args){
     //delete from tablename where a<>'sda' and b<='ads' and c>=12 and d=12.4;
     //0      1     2        3      4
+    
     try{
     if(args.at(1)!="from"){ throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (delete)");}
     string tablename=args.at(2);
@@ -483,7 +494,7 @@ void Parser::Delete(vector<string> args){
         i++;
         //sqlvalue
         string value=args.at(i);
-        if(value.at(0)=='\''&&value.at(value.length()-1)=='\''){
+        if(value.at(0)=='\''||value.at(0)=='\"'&&value.at(value.length()-1)=='\''||value.at(value.length()-1)=='\"'){
             con.val.type.type=AType::String;
             con.val.type.attri_name=con.name;
             con.val.str=value.substr(1,value.length()-2);
