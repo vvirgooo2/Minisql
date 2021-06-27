@@ -23,7 +23,7 @@ BTNode<T>::BTNode(int n)
     clearkey(min);
     keys = new T[n]();
     p = new Position[n]();
-    child = new BTNode<T>*[n+1];
+    child = new BTNode<T>*[n+1]();
 }
 template <typename T>
 BTNode<T>::~BTNode()
@@ -679,7 +679,7 @@ bool TableIndex::CreateIndex(IndexInfo<int> &indexinfo)
     if (indexinfo.type != AType::Integer)
         return false;
     BTree<int> *BT = new BTree<int>(indexinfo);
-    int_index.push_back(*BT);
+    int_index.push_back(BT);
     i_n++;
     n++;
     return true;
@@ -689,7 +689,7 @@ bool TableIndex::CreateIndex(IndexInfo<float> &indexinfo)
     if (indexinfo.type != AType::Float)
         return false;
     BTree<float> *BT = new BTree<float>(indexinfo);
-    float_index.push_back(*BT);
+    float_index.push_back(BT);
     f_n++;
     n++;
     return true;
@@ -699,18 +699,19 @@ bool TableIndex::CreateIndex(IndexInfo<string> &indexinfo)
     if (indexinfo.type != AType::String)
         return false;
     BTree<string> *BT = new BTree<string>(indexinfo);
-    str_index.push_back(*BT);
+    str_index.push_back(BT);
     s_n++;
     n++;
     return true;
 }
 bool TableIndex::DeleteIndex(const string& attr_name)
 {
-    std::vector<BTree<int>>::iterator it_i;
-    std::vector<BTree<float>>::iterator it_f;
-    std::vector<BTree<string>>::iterator it_s;
+    std::vector<BTree<int>*>::iterator it_i;
+    std::vector<BTree<float>*>::iterator it_f;
+    std::vector<BTree<string>*>::iterator it_s;
     for (it_i = int_index.begin(); it_i != int_index.end();++it_i) {
-        if (it_i->attr_name == attr_name) {
+        if ((*it_i)->attr_name == attr_name) {
+            delete (*it_i);
             int_index.erase(it_i);
             i_n--;
             n--;
@@ -718,7 +719,8 @@ bool TableIndex::DeleteIndex(const string& attr_name)
         }
     }
     for (it_f = float_index.begin(); it_f != float_index.end();++it_f) {
-        if (it_f->attr_name == attr_name) {
+        if ((*it_f)->attr_name == attr_name) {
+            delete (*it_f);
             float_index.erase(it_f);
             f_n--;
             n--;
@@ -726,7 +728,8 @@ bool TableIndex::DeleteIndex(const string& attr_name)
         }
     }
     for (it_s = str_index.begin(); it_s != str_index.end();++it_s) {
-        if (it_s->attr_name == attr_name) {
+        if ((*it_s)->attr_name == attr_name) {
+            delete (*it_s);
             str_index.erase(it_s);
             s_n--;
             n--;
@@ -740,17 +743,17 @@ bool TableIndex::DeleteIndex(const string& attr_name)
 bool TableIndex::InsertKey(vector<sqlvalue> index_value, const Position& p)
 {
     std::vector<sqlvalue>::iterator it_v;
-    std::vector<BTree<int>>::iterator it_i;
-    std::vector<BTree<float>>::iterator it_f;
-    std::vector<BTree<string>>::iterator it_s;
+    std::vector<BTree<int>*>::iterator it_i;
+    std::vector<BTree<float>*>::iterator it_f;
+    std::vector<BTree<string>*>::iterator it_s;
     bool is_find;
     for (it_v = index_value.begin(); it_v != index_value.end();it_v++) {
         is_find = false;
         switch (it_v->type.type) {
             case AType::Integer:{
                 for (it_i = int_index.begin(); it_i != int_index.end();it_i++) {
-                    if (it_i->attr_name == it_v->type.attri_name) {
-                        it_i->Insert(it_v->i, p);
+                    if ((*it_i)->attr_name == it_v->type.attri_name) {
+                        (*it_i)->Insert(it_v->i, p);
                         is_find = true;
                         break;
                     }
@@ -759,8 +762,8 @@ bool TableIndex::InsertKey(vector<sqlvalue> index_value, const Position& p)
             }
             case AType::Float: {
                 for (it_f = float_index.begin(); it_f != float_index.end();it_f++) {
-                    if (it_f->attr_name == it_v->type.attri_name) {
-                        it_f->Insert(it_v->f, p);
+                    if ((*it_f)->attr_name == it_v->type.attri_name) {
+                        (*it_f)->Insert(it_v->f, p);
                         is_find = true;
                         break;
                     }
@@ -769,8 +772,8 @@ bool TableIndex::InsertKey(vector<sqlvalue> index_value, const Position& p)
             }
             case AType::String: {
                 for (it_s = str_index.begin(); it_s != str_index.end();it_s++) {
-                    if (it_s->attr_name == it_v->type.attri_name) {
-                        it_s->Insert(it_v->str, p);
+                    if ((*it_s)->attr_name == it_v->type.attri_name) {
+                        (*it_s)->Insert(it_v->str, p);
                         is_find = true;
                         break;
                     }
@@ -786,17 +789,17 @@ bool TableIndex::InsertKey(vector<sqlvalue> index_value, const Position& p)
 bool TableIndex::DeleteKey(vector<sqlvalue> index_value)
 {
     std::vector<sqlvalue>::iterator it_v;
-    std::vector<BTree<int>>::iterator it_i;
-    std::vector<BTree<float>>::iterator it_f;
-    std::vector<BTree<string>>::iterator it_s;
+    std::vector<BTree<int>*>::iterator it_i;
+    std::vector<BTree<float>*>::iterator it_f;
+    std::vector<BTree<string>*>::iterator it_s;
     bool is_find;
     for (it_v = index_value.begin();it_v != index_value.end();it_v++) {
         is_find = false;
         switch (it_v->type.type) {
             case AType::Integer:{
                 for (it_i = int_index.begin(); it_i != int_index.end();it_i++) {
-                    if (it_i->attr_name == it_v->type.attri_name) {
-                        it_i->DeleteKey(it_v->i);
+                    if ((*it_i)->attr_name == it_v->type.attri_name) {
+                        (*it_i)->DeleteKey(it_v->i);
                         is_find = true;
                         break;
                     }
@@ -805,8 +808,8 @@ bool TableIndex::DeleteKey(vector<sqlvalue> index_value)
             }
             case AType::Float: {
                 for (it_f = float_index.begin(); it_f != float_index.end();it_f++) {
-                    if (it_f->attr_name == it_v->type.attri_name) {
-                        it_f->DeleteKey(it_v->f);
+                    if ((*it_f)->attr_name == it_v->type.attri_name) {
+                        (*it_f)->DeleteKey(it_v->f);
                         is_find = true;
                         break;
                     }
@@ -815,8 +818,8 @@ bool TableIndex::DeleteKey(vector<sqlvalue> index_value)
             }
             case AType::String: {
                 for (it_s = str_index.begin(); it_s != str_index.end();it_s++) {
-                    if (it_s->attr_name == it_v->type.attri_name) {
-                        it_s->DeleteKey(it_v->str);
+                    if ((*it_s)->attr_name == it_v->type.attri_name) {
+                        (*it_s)->DeleteKey(it_v->str);
                         is_find = true;
                         break;
                     }
@@ -833,22 +836,22 @@ vector<Position> TableIndex::GetPosition(const condition& c)
 {
     switch (c.val.type.type) {
         case AType::Integer:{
-            std::vector<BTree<int>>::iterator it;
+            std::vector<BTree<int>*>::iterator it;
             for (it = int_index.begin(); it != int_index.end();it++)
-                if (it->attr_name == c.name)
-                    return it->GetPosition(c.val.i, c.op);
+                if ((*it)->attr_name == c.name)
+                    return (*it)->GetPosition(c.val.i, c.op);
         }
         case AType::Float:{
-            std::vector<BTree<float>>::iterator it;
+            std::vector<BTree<float>*>::iterator it;
             for (it = float_index.begin(); it != float_index.end();it++)
-                if (it->attr_name == c.name)
-                    return it->GetPosition(c.val.f, c.op);
+                if ((*it)->attr_name == c.name)
+                    return (*it)->GetPosition(c.val.f, c.op);
         }
         case AType::String:{
-            std::vector<BTree<string>>::iterator it;
+            std::vector<BTree<string>*>::iterator it;
             for (it = str_index.begin(); it != str_index.end();it++)
-                if (it->attr_name == c.name)
-                    return it->GetPosition(c.val.str, c.op);
+                if ((*it)->attr_name == c.name)
+                    return (*it)->GetPosition(c.val.str, c.op);
         }
     }
     throw runtime_error("[Error] the attribute " + c.name + " in the where condition is not a index");
@@ -989,9 +992,9 @@ bool IndexManager::Save()
 {
     fstream output;
     std::vector<TableIndex>::iterator it_table;
-    std::vector<BTree<int>>::iterator it_i;
-    std::vector<BTree<float>>::iterator it_f;
-    std::vector<BTree<string>>::iterator it_s;
+    std::vector<BTree<int>*>::iterator it_i;
+    std::vector<BTree<float>*>::iterator it_f;
+    std::vector<BTree<string>*>::iterator it_s;
     int i;
     output.open("index.dat", ios::out | ios::binary);
     //output the number of tables that has index
@@ -1001,10 +1004,10 @@ bool IndexManager::Save()
         output << it_table->tablename << endl;
         output << it_table->n << ' ' << it_table->i_n << ' ' << it_table->f_n << ' ' << it_table->s_n << endl;
         for (it_i = it_table->int_index.begin(); it_i != it_table->int_index.end();it_i++) {
-            output << it_i->attr_name << endl;
-            output << 0 << ' ' << it_i->key_maxsize << ' ' << it_i->num_keys << endl;
+            output << (*it_i)->attr_name << endl;
+            output << 0 << ' ' << (*it_i)->key_maxsize << ' ' << (*it_i)->num_keys << endl;
             BTNode<int> *temp;
-            temp = it_i->first;
+            temp = (*it_i)->first;
             while (temp != NULL) {
                 for (i = 0; i < temp->size;i++) {
                     output << temp->keys[i] << ' ' << temp->p[i].blockID << ' ' << temp->p[i].offset << endl;
@@ -1013,10 +1016,10 @@ bool IndexManager::Save()
             }
         }
         for (it_f = it_table->float_index.begin(); it_f != it_table->float_index.end();it_f++) {
-            output << it_f->attr_name << endl;
-            output << 1 << ' ' << it_f->key_maxsize << ' ' << it_f->num_keys << endl;
+            output << (*it_f)->attr_name << endl;
+            output << 1 << ' ' << (*it_f)->key_maxsize << ' ' << (*it_f)->num_keys << endl;
             BTNode<float> *temp;
-            temp = it_f->first;
+            temp = (*it_f)->first;
             while (temp != NULL) {
                 for (i = 0; i < temp->size;i++) {
                     output << temp->keys[i] << ' ' << temp->p[i].blockID << ' ' << temp->p[i].offset << endl;
@@ -1025,10 +1028,10 @@ bool IndexManager::Save()
             }
         }
         for (it_s = it_table->str_index.begin(); it_s != it_table->str_index.end();it_s++) {
-            output << it_s->attr_name << endl;
-            output << 2 << ' ' << it_s->key_maxsize << ' ' << it_s->num_keys << endl;
+            output << (*it_s)->attr_name << endl;
+            output << 2 << ' ' << (*it_s)->key_maxsize << ' ' << (*it_s)->num_keys << endl;
             BTNode<string> *temp;
-            temp = it_s->first;
+            temp = (*it_s)->first;
             while (temp != NULL) {
                 for (i = 0; i < temp->size;i++) {
                     output << temp->keys[i] << endl
@@ -1053,7 +1056,6 @@ bool IndexManager::Read()
     Position p;
     input.open("index.dat", ios::in | ios::binary);
     if (!input.is_open()) {
-        cout << "file open error" << endl;
         return false;
     }
     input >> num_table;
@@ -1133,27 +1135,32 @@ bool compare(T a, T b)
 int a[MAXN];
 int main(void)
 {
-    IndexInfo<int> indexinfo("my test table", MAXN, "grade", AType::Integer, 4);
+    IndexInfo<string> indexinfo("my test table", MAXN, "sno", AType::String, 8);
     int i;
-    for (i = MAXN - 1; i >= 0; i--)
-    {
-        a[i] = i;
-        indexinfo.AddKey(a[i], i * 4 / 4096, i * 4 % 4096);
-    }
+    // for (i = MAXN - 1; i >= 0; i--)
+    // {
+    //     a[i] = i;
+    //     indexinfo.AddKey(a[i], i * 4 / 4096, i * 4 % 4096);
+    // }
     IndexManager IM;
-    //IM.Read();
     IM.CreateIndex(indexinfo.tablename, indexinfo);
-    // //test for deleting
-    sqlvalue v;
-    v.type.type = AType::Integer;
-    v.type.attri_name = "grade";
-    vector<sqlvalue> vv;
-    for (i = MAXN-1; i >= MAXN/2+1;i--) {
-        v.i = a[i];
-        vv.push_back(v);
-        IM.DeleteKey("my test table", vv);
-        vv.pop_back();
-    }
+    indexinfo.key_maxsize = 16;
+    indexinfo.attr_name = "sname";
+    IM.CreateIndex(indexinfo.tablename, indexinfo);
+    IM.DeleteIndex(indexinfo.tablename, "sname");
+    IM.DeleteIndex(indexinfo.tablename, "sno");
+    return 0;
+    // // //test for deleting
+    // sqlvalue v;
+    // v.type.type = AType::Integer;
+    // v.type.attri_name = "grade";
+    // vector<sqlvalue> vv;
+    // for (i = MAXN-1; i >= MAXN/2+1;i--) {
+    //     v.i = a[i];
+    //     vv.push_back(v);
+    //     IM.DeleteKey("my test table", vv);
+    //     vv.pop_back();
+    // }
     // sort(a, a + MAXN/2+1, compare<int>);
     // cout << "hello" << endl;
     // //test the result after the delete
@@ -1178,14 +1185,14 @@ int main(void)
     //     node = node->nextnode;
     // }
     //test for select
-    condition c;
-    c.name = "grade";
-    c.op = 1; //>=1000
-    c.val.i = -1;
-    c.val.type.type = AType::Integer;
-    vector<Position> p;
-    p = IM.GetPosition("my test table", c);
-    cout << "hello" << endl;
+    // condition c;
+    // c.name = "grade";
+    // c.op = 1; //>=1000
+    // c.val.i = -1;
+    // c.val.type.type = AType::Integer;
+    // vector<Position> p;
+    // p = IM.GetPosition("my test table", c);
+    // cout << "hello" << endl;
     //IM.DeleteIndex("my test table", "grade");
     //cout << "Index Deleted" << endl;
 
