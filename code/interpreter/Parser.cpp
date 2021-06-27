@@ -272,7 +272,7 @@ void Parser::Select(vector<string> args){
         else if(args.at(i)=="<")    con.op=4;
         else if(args.at(i)==">"&&args.at(i+1)=="=") { con.op=3; i++;}
         else if(args.at(i)==">")                    con.op=2;
-        else { cout<<"syntax error!"<<endl; return;}
+        else {throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");}
         i++;
         //sqlvalue
         string value=args.at(i);
@@ -357,7 +357,7 @@ void Parser::Selectpart(vector<string> args){
         else if(args.at(i)=="<")    con.op=4;
         else if(args.at(i)==">"&&args.at(i+1)=="=") { con.op=3; i++;}
         else if(args.at(i)==">")                    con.op=2;
-        else { cout<<"syntax error!"<<endl; return;}
+        else { throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");}
         i++;
         //sqlvalue
         string value=args.at(i);
