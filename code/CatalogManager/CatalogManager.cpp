@@ -158,8 +158,7 @@ void CatalogManager::LoadFromFile() {
 /**
  * Create table
  * TableName table name string
- * schemaList schemas vector
- * PrimaryKey primary key string
+ * attris attri_type vector
  */
 void CatalogManager::CreateTable(const std::string &TableName,vector<attri_type>attris) {
     Table table;
