@@ -1,20 +1,4 @@
 #include"IndexManager.h"
-
-bool clearkey(int &key)
-{
-    key = 0;
-    return true;
-}
-bool clearkey(float &key)
-{
-    key = 0;
-    return true;
-}
-bool clearkey(string &key)
-{
-    key.clear();
-    return true;
-}
 //BNode
 template <typename T>
 BTNode<T>::BTNode(int n)
@@ -631,7 +615,9 @@ vector<Position> BTree<T>::GetPosition(T val, int op)
             return pv;
         switch(op) {
             case 1:// <>
-                for (i++; i < temp->size;i++) {
+                if (val == temp->keys[i])
+                    i++;
+                for (; i < temp->size;i++) {
                     pv.push_back(temp->p[i]);
                 }
                 temp = temp->nextnode;
@@ -854,11 +840,9 @@ vector<Position> TableIndex::GetPosition(const condition& c)
 IndexManager::IndexManager()
 :n(0)
 {
-    Read();
 }
 IndexManager::~IndexManager()
 {
-    Save();
     TI.clear();
     TI.resize(0);
 }
@@ -993,7 +977,7 @@ bool IndexManager::Save()
     int i;
     output.open("index.dat", ios::out | ios::binary);
     //output the number of tables that has index
-    output << TI.size() << endl;
+    output << this->n << endl;
     //for each table
     for (it_table = TI.begin(); it_table != TI.end();it_table++) {
         output << it_table->tablename << endl;
@@ -1135,7 +1119,7 @@ int main(void)
     int i;
     for (i = MAXN - 1; i >= 0; i--)
     {
-        a[i] = rand();
+        a[i] = i;
         indexinfo.AddKey(a[i], i * 4 / 4096, i * 4 % 4096);
     }
     IndexManager IM;
@@ -1179,7 +1163,7 @@ int main(void)
     condition c;
     c.name = "grade";
     c.op = 1; //>=1000
-    c.val.i = 1000;
+    c.val.i = -1;
     c.val.type.type = AType::Integer;
     vector<Position> p;
     p = IM.GetPosition("my test table", c);
