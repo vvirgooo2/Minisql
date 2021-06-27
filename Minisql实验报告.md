@@ -149,6 +149,54 @@ void Parser::Execfile(vector<string> args){
 
 ### 5. IndexManager
 
+#### 5.1 功能描述
+
+Indec Manager负责数据库中的索引，即数据库中索引的创建，删除，索引值的更新（插入、删除）等等。本实验设计的Index Manager通过类`IndexManager`实现对索引的控制。在整个程序中，Index Manager通过该接口类与API，Recorder Manger与Buffer Manager进行交互，实现索引功能，提高程序查找和运行的速度。
+
+以下是`IndexManager`类的接口代码：
+
+```cpp
+//this class is the interface of the API, the highest level to control B+Tree
+class IndexManager
+{
+    public:
+        int n;//the number of table that has an index
+        vector<TableIndex> TI;
+        IndexManager();
+        ~IndexManager();
+        bool CreateIndex(const string &tablename, IndexInfo<int> &indexinfo);
+        bool CreateIndex(const string &tablename, IndexInfo<float> &indexinfo);
+        bool CreateIndex(const string &tablename, IndexInfo<string> &indexinfo);
+        bool DeleteIndex(const string &tablename, const string &index_name);
+        bool InsertKey(const string &tablename, vector<sqlvalue> index_value, const Position& p);
+        bool DeleteKey(const string &tablename, vector<sqlvalue> index_value);
+        vector<Position> GetPosition(const string &tablename, const condition &c);
+        bool Save();
+        //call the read every time program is executed
+        bool Read();
+
+    private:
+        TableIndex *FindTable(const string &tablename);
+        void Error();
+};
+```
+
+#### 5.2 B+树实现逻辑
+
+​	在数据库的B+树中，根据每次创建索引键值的最大长度，B+树会自动计算节点的阶。一般来讲，我们保证B+树的每个节点的字节大小在一个page左右，这与个人的定义有关。程序中，我们去一个page为$4KB$。因此每个节点阶的大小应该为：
+$$
+order = \frac{4096}{sizeof(key)+sizeof(child\ pointer)}
+$$
+其中每个键值在叶节点中还包括对应的位置，即$blockID$与$block \ offset$.
+
+​	索引通过接口函数进行创建和删除。同时，每次在对disk的表中进行插入删除时，均需要对该表的索引进行更新。
+
+​	在查找中，Index Manager接口API传入的比较信息，在对应的B+树中进行搜索，并返回所有满足条件的B+树的位置信息，并提供给Record Manager进行调用，以加快搜索速度。
+
+​	实际的测试表明，100000量级的数据，计算出的B+树一般为3层，40000及以下量级的数据创建的B+树一般为2层。这有效保证了B+
+
+树的高搜索效率，提高了数据查找的速度。 
+
 ### 6. BufferManager
 
 
