@@ -129,11 +129,57 @@ SQL脚本文件中可以包含任意多条上述8种SQL语句，MiniSQL系统读
 
 ### 1. 组员分工
 
+张振宇：RecordManager + Interpreter + 测试 + 报告
+
+徐巧颖：BufferManager + 报告
+
+姜东甫：IndexManager + 报告
+
+钟家伟：CatalogManager + API + 报告
+
+
+
 ### 2. 整体结构介绍
+
+整个数据库的结构参照了实验指导部分，主体分为四个部分，分别是`RecordManager`, `BufferManager`, `IndexManager`和 `CatalogManager`. 
+
+
+
+
 
 ### 3. 流程图
 
+以一条`insert`语句为例，下面是其经过的模块及相关处理：
+
+```flow
+flow
+st=>start: insert tuple
+ip=>operation: interpreter
+err=>operation: report error
+index=>operation: Index Manager
+cond=>condition: success or failure?
+end=>end
+api=>operation: API 
+rec=>operation: Record Manager
+prt=>operation: PRINT
+cond2=>condition: If find 
+buf=>operation: Buffer Manager
+disk=>operation: DISK 
+st->ip->cond
+cond(yes)->api->rec->buf->disk->end
+
+cond(no)->err
+```
+
+
+
+
+
 ### 4. 模块设计与简要概述
+
+
+
+
 
 
 
@@ -415,7 +461,83 @@ $$
 
 ​	实际的测试表明，100000量级的数据，计算出的B+树一般为3层，40000及以下量级的数据创建的B+树一般为2层。这有效保证了B+树的高搜索效率，提高了数据查找的速度。 
 
+
+
 ### 6. BufferManager
+
+#### 6.1 功能描述
+
+本模块为record Manager提供可读写的块。在底层实现软硬件交互，通过内存池的引入加快了record manager的查找速度，同时write through机制的引入避免了系统故障而导致的数据丢失。
+
+
+
+#### 6.2 数据结构
+
+主要用了block类实现单个block的管理：
+
+```c++
+// 读内存块的时候，默认的是char(n)类型的要存n+1个字节
+class Block
+{
+/* 我们定义磁盘上最前4个字节为表头，前32+4 = 36个字节为块头，从第41个字节开始存储记录的信息
+ * 解析外存时就按照这个规则还原成员变量*/
+public:
+    char* data_begin;  // 有效记录的首地址 8 Byte
+    string TableName;  //32 Byte
+    int BlockId;  //4 Byte
+    Block();
+    Block(string tn, int bi);
+    bool is_empty();
+};
+```
+
+
+
+用BufferManager类管理整个内存中的block：
+
+```c++
+class BufferManage
+{
+    
+private:
+    // 各个表的当前 最后一块的ID
+
+public:
+    Block *Buffer_pool;
+
+    BufferManage();
+    // 遍历bufferpool数组，根据表名和blockID搜索非满的块，有则返回块指针，没有则返回null 
+    Block* get_block(string TableName, int BlockId);  
+    void drop_table(string TableName);
+    
+    // 返回处理过的块
+    void ret_block(Block* blk);  
+
+};
+```
+
+
+
+#### 实现逻辑
+
+- bufferManager中的Buffer_pool指向一个block类型的数组，里面存放了内存管理的所有块；
+
+  主要函数有两个`get_block()`和`ret_block()`，分别用于给record manager提供他所需要的块和更新record manager返回的块到内存和硬盘；
+
+  `drop_table()`函数主要用于删除内存中的相应表的所有`block`.
+
+- 另有四个DISK操作的函数：
+
+  ```c++
+  Block* fetch_block_disk(string TableName, int BlockId);
+  void write_block_disk(Block*blk);
+  int get_total_block_num(string TableName);
+  void edit_total_block_num(string TableName, int add);
+  ```
+
+  他们分别用于从硬盘获取块，将更新过的块还回硬盘，获得某张table上的block数目和更新某张table上的block数目。
+
+
 
 
 
