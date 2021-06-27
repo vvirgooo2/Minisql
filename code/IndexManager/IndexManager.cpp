@@ -910,10 +910,19 @@ bool IndexManager::CreateIndex(const string &tablename, IndexInfo<string> &index
 bool IndexManager::DeleteIndex(const string &tablename, const string &index_name)
 {
     TableIndex *temp;
+    std::vector<TableIndex>::iterator it_table;
     temp = this->FindTable(tablename);
     if (temp != NULL) {
         if (temp->DeleteIndex(index_name)){
-            n--;
+            if (temp->n == 0) {
+                for (it_table = TI.begin(); it_table != TI.end();it_table++) {
+                    if (it_table->tablename == temp->tablename) {
+                        TI.erase(it_table);
+                        n--;
+                        break;
+                    }
+                }
+            }
             return true;
         }
         return false;
