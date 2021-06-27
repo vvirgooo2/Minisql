@@ -4,7 +4,7 @@
 #include<fstream>
 #include<iomanip>
 #include<cstdio>
-#define INDEX_DEBUG
+//#define INDEX_DEBUG
 extern BufferManage bm;
 extern IndexManager im;
 //打印结果

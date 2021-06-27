@@ -1,4 +1,20 @@
 #include"IndexManager.h"
+
+bool clearkey(int &key)
+{
+    key = 0;
+    return true;
+}
+bool clearkey(float &key)
+{
+    key = 0;
+    return true;
+}
+bool clearkey(string &key)
+{
+    key.clear();
+    return true;
+}
 //BNode
 template <typename T>
 BTNode<T>::BTNode(int n)
@@ -838,9 +854,11 @@ vector<Position> TableIndex::GetPosition(const condition& c)
 IndexManager::IndexManager()
 :n(0)
 {
+    Read();
 }
 IndexManager::~IndexManager()
 {
+    Save();
     TI.clear();
     TI.resize(0);
 }
@@ -975,7 +993,7 @@ bool IndexManager::Save()
     int i;
     output.open("index.dat", ios::out | ios::binary);
     //output the number of tables that has index
-    output << this->n << endl;
+    output << TI.size() << endl;
     //for each table
     for (it_table = TI.begin(); it_table != TI.end();it_table++) {
         output << it_table->tablename << endl;

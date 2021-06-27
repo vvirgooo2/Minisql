@@ -253,6 +253,8 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
 //调用record的select或索引判断主键或unique键的冲突
 //无问题给record插入，顺便同步给index
 void API_insert(string tablename,vector<sqlvalue> value_list){
+    if(value_list[0].i%1000==0) cout<<value_list[0].i<<endl;
+    
     //check the table
     if(!cm.ExistTable(tablename)) throw std::runtime_error("No such table!");
     Table table=cm.GetTable(tablename);
@@ -276,7 +278,9 @@ void API_insert(string tablename,vector<sqlvalue> value_list){
         value_list[i].type.attri_name=table.attri_names[i];
     } 
     //check duplicate
+
     for(int i=0;i<value_list.size();i++){
+        bool flagin=false;
         if(table.attri_types[i].primary||table.attri_types[i].unique){
             vector<condition> conditions;
             condition indexcon;
@@ -287,21 +291,21 @@ void API_insert(string tablename,vector<sqlvalue> value_list){
             //check index
             for(int j=0;j<table.index.size();j++){
                 if(table.index[j].first==table.attri_names[i]){
+                    flagin=true;
                     vector<Position> pos;
                     pos=im.GetPosition(table.tablename,indexcon);
                     if(!pos.empty()) throw std::runtime_error("Duplicate keys in "+table.attri_names[i]);
                 }
             }
+            if(flagin) continue;
             //noindex
             if(rm->selectRecord(table,table.attri_names,conditions,false)){
                 throw std::runtime_error("Duplicate keys in "+table.attri_names[i]);
             }
-
         }
     }
     Tuple t;
     t.element=value_list;
-    //测试块
     rm->insertRecord(table,t);
 }
 

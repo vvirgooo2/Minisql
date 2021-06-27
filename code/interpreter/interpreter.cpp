@@ -13,11 +13,10 @@ void interpreter::Loop(){
         if(ins=="quit"){
             cout << "Bye!" << endl;
             getchar();
-            getchar();
             exit(0);
         }
         try{ 
-            State = parser.input(ins);  //false代表还没输入完
+            State = parser.input(ins);  //false stands for input continue
         }
         catch (std::runtime_error &error) {
             cout << "[Error] " << error.what() << endl;

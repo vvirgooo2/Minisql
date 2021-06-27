@@ -79,7 +79,7 @@ class TableIndex
 class IndexManager
 {
     public:
-        int n;//the number of table that has an index
+        int n=0;//the number of table that has an index
         vector<TableIndex> TI;
         IndexManager();
         ~IndexManager();
