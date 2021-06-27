@@ -299,7 +299,7 @@ void Parser::Select(vector<string> args){
             stype=1;
             i+=2;
         }
-        else break;
+        else throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");
     }
 #ifdef DEBUG
     auto itr=conditions.begin();
@@ -328,6 +328,7 @@ void Parser::Selectpart(vector<string> args){
     try{
     int i=1;
     vector<string> s_attris;
+    if(args.at(1)=="from") throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");
     while(args.at(i)!="from"){
         string selecta;
         selecta=args.at(i++);
@@ -384,7 +385,7 @@ void Parser::Selectpart(vector<string> args){
             stype=1;
             i+=2;
         }
-        else break;
+        else throw std::runtime_error("SYNTAX ERROR: You have an error in your SQL syntax (Select)");
     }
 #ifdef DEBUG
     auto tr=s_attris.begin();

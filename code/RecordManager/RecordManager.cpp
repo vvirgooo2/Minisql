@@ -378,16 +378,18 @@ bool RecordManager::insertRecord(const Table &table, const Tuple &record)
         }
     }
     //同步索引
-    vector<sqlvalue> values;
-    for(int i=0;i<table.attri_names.size();i++){
-        for(int j=0;j<table.index.size();j++){ 
-            if(table.attri_names[i]==table.index[j].first){  //只要有索引就插入，注意sqlvalue里面要有属性名
-                sqlvalue v=record.element[i];
-                values.push_back(v);  
-            }
-        }   
-    }
+    if(table.index.size()){
+        vector<sqlvalue> values;
+        for(int i=0;i<table.attri_names.size();i++){
+            for(int j=0;j<table.index.size();j++){ 
+                if(table.attri_names[i]==table.index[j].first){  //只要有索引就插入，注意sqlvalue里面要有属性名
+                 sqlvalue v=record.element[i];
+                 values.push_back(v);  
+                }
+            }   
+        }
     im.InsertKey(table.tablename,values,pos);
+    }
     bm.ret_block(B);
     return true;
 }
@@ -420,15 +422,17 @@ bool RecordManager::deleteRecord(const Table &table, const vector<condition> con
                 /*delete index on bplus tree*/
                 //检查每个属性是否有索引，有的话就更新
                 vector<sqlvalue> values;
-                for(int i=0;i<table.attri_names.size();i++){
-                    for(int j=0;j<table.index.size();j++){ 
-                        if(table.attri_names[i]==table.index[j].first){
-                            sqlvalue v=t.element[i];
-                            values.push_back(v);  
-                        }   
+                if(table.index.size()){
+                    for(int i=0;i<table.attri_names.size();i++){
+                        for(int j=0;j<table.index.size();j++){ 
+                            if(table.attri_names[i]==table.index[j].first){
+                                sqlvalue v=t.element[i];
+                                values.push_back(v);  
+                            }   
+                        }
                     }
+                    im.DeleteKey(table.tablename,values);
                 }
-                im.DeleteKey(table.tablename,values);
             }
         }
         bm.ret_block(B);
