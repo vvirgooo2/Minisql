@@ -451,6 +451,7 @@ private:
 ```
 
 #### 4.3 实现逻辑
+##### 4.3.1 DB Files⽂件格式
 Catalog Manager在整个过程中主要会产⽣ tables.meta 、tablename.catalog 等DB Files，它们全部是⽂本⽂件。
   ​	Meta⽂件:tables.meta ⽂件中储存了全部的表名称。其中第⼀⾏保存了数据库中所有表的数量总和，下⾯的每⼀⾏是⼀个表名，并为了规避不同系统下换⾏产⽣的问题，使⽤了0作为不同表名称的分隔符。
   
@@ -462,7 +463,7 @@ CatalogManager中的LoadFromFile和WriteToFile分別是對DB文件的读和写�
   
   WriteToFile把當前table的內容輸出.把表名tablename寫進DB文件table.mata,把定義table寫進DB文件table.catalog.
   
-操作函数：
+##### 4.3.2 操作函数：
 
 ```c++
     void CreateTable(const std::string &TableName,const vector<attri_type>attris);
