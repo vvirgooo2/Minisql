@@ -12,6 +12,7 @@
 #include<algorithm>
 #include<chrono>
 #include<fstream>
+//#define DEBUG
 using namespace std;
 //处理输入，遇到分号执行一次
 bool Parser::input(std::string input){
