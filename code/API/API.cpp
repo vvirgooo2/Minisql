@@ -258,7 +258,7 @@ void API_selectpart(vector<string> attris, string tablename, vector<condition> c
 //调用record的select或索引判断主键或unique键的冲突
 //无问题给record插入，顺便同步给index
 void API_insert(string tablename,vector<sqlvalue> value_list){
-    if(value_list[0].i%1000==0) cout<<value_list[0].i<<endl;
+    //if(value_list[0].i%1000==0) cout<<value_list[0].i<<endl;
     
     //check the table
     if(!cm.ExistTable(tablename)) throw std::runtime_error("No such table!");
