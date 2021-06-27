@@ -125,6 +125,9 @@ execfile 文件名;
 SQL脚本文件中可以包含任意多条上述8种SQL语句，MiniSQL系统读入该文件，然后按序依次逐条执行脚本中的SQL语句。
 
 
+
+
+
 ## Chapter 2 - 总体设计
 
 ### 1. 组员分工
@@ -143,33 +146,17 @@ SQL脚本文件中可以包含任意多条上述8种SQL语句，MiniSQL系统读
 
 整个数据库的结构参照了实验指导部分，主体分为四个部分，分别是`RecordManager`, `BufferManager`, `IndexManager`和 `CatalogManager`. 
 
+![image-20210628031808846](/home/xenia/GIT/minisql/报告图片/整体模式图.png)
+
 
 
 
 
 ### 3. 流程图
 
-以一条`insert`语句为例，下面是其经过的模块及相关处理：
+以一条`insert`语句为例，下面是其经过的模块及相关处理：![image-20210628030135371](/home/xenia/GIT/minisql/报告图片/流程图.png)
 
-```flow
-flow
-st=>start: insert tuple
-ip=>operation: interpreter
-err=>operation: report error
-index=>operation: Index Manager
-cond=>condition: success or failure?
-end=>end
-api=>operation: API 
-rec=>operation: Record Manager
-prt=>operation: PRINT
-cond2=>condition: If find 
-buf=>operation: Buffer Manager
-disk=>operation: DISK 
-st->ip->cond
-cond(yes)->api->rec->buf->disk->end
 
-cond(no)->err
-```
 
 
 
@@ -177,7 +164,7 @@ cond(no)->err
 
 ### 4. 模块设计与简要概述
 
-
+当遇到一条指令时，我们先对其进行语法解析，同时检查其错误，解析完进入API，API调用相关函数，record manager负责从数据库中找到相关的tuple进行操作，其操作与另外两个模块的交互为：通过调用index来确定tuple所在的blockid，加快查询的速度；通过调用buffermanager来获取tuple所在的块，完成工作后，record再将修改好的块交给buffer完成对硬盘的更新。
 
 
 
