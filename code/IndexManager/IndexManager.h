@@ -61,9 +61,9 @@ class TableIndex
     public:
         string tablename;
         int n, i_n, f_n, s_n; // the total number of indices, int indices, float indices, string indices respectively
-        std::vector<BTree<int>> int_index;
-        std::vector<BTree<float>> float_index;
-        std::vector<BTree<string>> str_index;
+        std::vector<BTree<int>*> int_index;
+        std::vector<BTree<float>*> float_index;
+        std::vector<BTree<string>*> str_index;
         TableIndex();
         TableIndex(const string&tablename);
         ~TableIndex();
